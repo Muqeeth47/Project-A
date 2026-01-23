@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@font-face {
+    font-family: 'Kalam';
+    src: url('https://fonts.googleapis.com/css2?family=Kalam:wght@700&display=swap');
+}
+
+@font-face {
+    font-family: 'Patrick Hand';
+    src: url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    src: url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+}
+
+@theme {
+    --color-paper-light: #fdfbf7;
+    --color-paper-muted: #e5e0d8;
+    --color-pencil: #2d2d2d;
+    --color-pencil-muted: rgba(45, 45, 45, 0.4);
+    --color-marker-red: #ff4d4d;
+    --color-marker-blue: #2d5da1;
+    --color-marker-yellow: #fff9c4;
+
+    --font-heading: "Kalam", cursive;
+    --font-body: "Patrick Hand", cursive;
+    --font-mono: "JetBrains Mono", monospace;
+
+    --shadow-hard: 4px 4px 0px 0px #2d2d2d;
+    --shadow-hard-lg: 8px 8px 0px 0px #2d2d2d;
+    --shadow-hard-sm: 2px 2px 0px 0px #2d2d2d;
+    --shadow-hard-blue: 4px 4px 0px 0px #2d5da1;
+
+    --radius-wobbly: 255px 15px 225px 15px / 15px 225px 15px 255px;
+    --radius-wobbly-md: 15px 225px 15px 255px / 255px 15px 225px 15px;
+}
+
+:root {
+    --background: #fdfbf7;
+    --foreground: #2d2d2d;
+}
+
+body {
+    background-color: var(--background);
+    color: var(--foreground);
+    background-image: radial-gradient(#e5e0d8 1px, transparent 1px);
+    background-size: 24px 24px;
+    font-family: var(--font-body);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+main {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.wobbly-border {
+    border: 3px solid #2d2d2d;
+    border-radius: var(--radius-wobbly);
+}
+
+.sketch-card {
+    background: white;
+    border: 2px solid #2d2d2d;
+    box-shadow: var(--shadow-hard);
+    border-radius: 12px 125px 15px 105px / 15px 15px 125px 105px;
+}
