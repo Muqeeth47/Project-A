@@ -27,7 +27,7 @@ import * as Escapes from "@/core/escapes";
 import { generateASCII, getASCIIFonts } from "@/core/ascii";
 import { copyToClipboard, downloadFile, getTextStats } from "@/core/utils";
 
-type LabTab = "encode" | "text" | "ascii" | "dev" | "generators";
+type LabTab = "encode" | "text" | "ascii" | "dev" | "generators" | "easter eggs";
 
 export default function LabPage() {
     const [activeTab, setActiveTab] = useState<LabTab>("encode");
@@ -63,12 +63,85 @@ export default function LabPage() {
         setOutput("");
     };
 
+    // Easter Egg State
+    const [logoClicks, setLogoClicks] = useState(0);
+    const [madnessMode, setMadnessMode] = useState(false);
+
+    const [activeTheme, setActiveTheme] = useState<"batman" | "cat" | null>(null);
+
+    // Easter Egg: Check Modes
+    useEffect(() => {
+        const lowerInput = input.toLowerCase();
+
+        // Helper to clear modes
+        const clearModes = () => {
+            setActiveTheme(null);
+            document.body.classList.remove("batman-mode", "cat-mode");
+        };
+
+        if (lowerInput === "i am batman") {
+            setActiveTheme("batman");
+            document.body.classList.add("batman-mode");
+            new Audio("/audio/batman.mp3").play().catch(() => { });
+            const timer = setTimeout(clearModes, 5000);
+            return () => clearTimeout(timer);
+        }
+
+        if (lowerInput === "meow") {
+            setActiveTheme("cat");
+            document.body.classList.add("cat-mode");
+            new Audio("/audio/meow.mp3").play().catch(() => { });
+            const timer = setTimeout(clearModes, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [input]);
+
+    // Easter Egg: Cool Command (Reactive)
+    useEffect(() => {
+        if (input === "sudo make me cool") {
+            setOutput("You were already cool 😎");
+        }
+    }, [input]);
+
+    // Easter Egg: Logo Click
+    const handleLogoClick = () => {
+        if (madnessMode) return;
+        const newCount = logoClicks + 1;
+        setLogoClicks(newCount);
+
+        if (newCount >= 3) {
+            setMadnessMode(true);
+            setTimeout(() => {
+                setMadnessMode(false);
+                setLogoClicks(0);
+            }, 5000);
+        }
+    };
+
+    const isCoolBypass = () => {
+        if (input === "sudo make me cool") {
+            setOutput("You were already cool 😎");
+            return true;
+        }
+        return false;
+    };
+
     // Transformation handlers
-    const runEncoder = (fn: (s: string) => string) => setOutput(fn(input));
-    const runTransformer = (fn: (s: string, ...args: any[]) => string, ...args: any[]) => setOutput(fn(input, ...args));
-    const runGenerator = (fn: (...args: any[]) => string, ...args: any[]) => setOutput(fn(...args));
+    const runEncoder = (fn: (s: string) => string) => {
+        if (isCoolBypass()) return;
+        setOutput(fn(input));
+    };
+    const runTransformer = (fn: (s: string, ...args: any[]) => string, ...args: any[]) => {
+        if (isCoolBypass()) return;
+        setOutput(fn(input, ...args));
+    };
+    const runGenerator = (fn: (...args: any[]) => string, ...args: any[]) => {
+        // Generators usually don't use input, but good to be consistent if they did
+        setOutput(fn(...args));
+    };
 
     const handleASCII = async () => {
+        if (isCoolBypass()) return;
         try {
             const res = await generateASCII(input || "CASE", asciiFont as any);
             setOutput(res);
@@ -77,57 +150,257 @@ export default function LabPage() {
         }
     };
 
-    const tabs = [
+    const tabs: { id: LabTab, label: string, icon: React.ReactNode }[] = [
         { id: "encode", label: "Encode", icon: <Binary size={18} /> },
         { id: "text", label: "Text", icon: <Type size={18} /> },
         { id: "ascii", label: "ASCII", icon: <Sparkles size={18} /> },
         { id: "dev", label: "Dev Tools", icon: <CodeIcon size={18} /> },
         { id: "generators", label: "Generators", icon: <Key size={18} /> },
+        { id: "easter eggs", label: "Secrets", icon: <Sparkles size={18} className="text-purple-500" /> },
     ];
 
-    return (
-        <div className="min-h-screen p-4 md:p-8 flex flex-col gap-8 max-w-7xl mx-auto">
-            {/* Header */}
-            <header className="flex flex-col md:flex-row justify-between items-center gap-4">
-                <h1 className="font-heading text-4xl underline decoration-marker-red decoration-4">pRojEctCaSE Lab</h1>
-
-                <nav className="flex flex-wrap gap-2">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id as LabTab)}
-                            className={`
-                flex items-center gap-2 px-4 py-2 font-body text-lg border-2 border-pencil transition-all
-                ${activeTab === tab.id ? "bg-pencil text-white -rotate-1 shadow-hard-sm" : "bg-white hover:bg-paper-muted"}
-              `}
-                            style={{ borderRadius: "10px 10px 10px 10px / 50px 10px 50px 10px" }}
+    if (activeTab === "easter eggs") {
+        return (
+            <div className="min-h-screen p-4 md:p-8 flex flex-col gap-8 max-w-7xl mx-auto">
+                {/* Header to maintain context */}
+                <header className="flex flex-col md:flex-row justify-between items-center gap-6 relative">
+                    <div className="flex flex-col items-center md:items-start text-center md:text-left">
+                        <h1
+                            onClick={handleLogoClick}
+                            className={`font-heading text-3xl md:text-4xl underline decoration-marker-red decoration-4 cursor-pointer select-none transition-all ${madnessMode ? "shake-crazy text-xs font-mono no-underline whitespace-pre" : ""}`}
                         >
-                            {tab.icon} {tab.label}
-                        </button>
-                    ))}
+                            {madnessMode ? `
+ ____  ____   ___    ___  _____ 
+|  _ \\|  _ \\ / _ \\  / _ \\| ____|
+| |_) | |_) | | | || | | |  _|  
+|  __/|  _ <| |_| || |_| | |___ 
+|_|   |_| \\_\\\\___/  \\___/|_____|
+` : "pRojEctCaSE Lab"}
+                        </h1>
+                    </div>
+
+                    <nav className="w-full md:w-auto px-2">
+                        {/* Mobile Dropdown */}
+                        <div className="md:hidden w-full">
+                            <div className="relative">
+                                <select
+                                    className="w-full bg-white border-[3px] border-pencil p-4 pr-10 font-heading text-xl appearance-none rounded-2xl shadow-hard-sm focus:outline-none focus:border-marker-blue transition-all active:scale-[0.98]"
+                                    value={activeTab}
+                                    onChange={(e) => setActiveTab(e.target.value as LabTab)}
+                                    style={{ borderRadius: "125px 12px 105px 12px / 12px 125px 12px 105px" }}
+                                >
+                                    {tabs.map(tab => <option key={tab.id} value={tab.id}>{tab.label}</option>)}
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-marker-red animate-pulse">
+                                    <ChevronRight className="rotate-90" size={24} />
+                                </div>
+                            </div>
+                        </div>
+                        {/* Desktop Tabs */}
+                        <div className="hidden md:flex flex-wrap gap-2">
+                            {tabs.map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id as LabTab)}
+                                    className={`
+                        flex items-center gap-2 px-4 py-2 font-body text-lg border-2 border-pencil transition-all
+                        ${activeTab === tab.id ? "bg-pencil text-white -rotate-1 shadow-hard-sm" : "bg-white hover:bg-paper-muted"}
+                    `}
+                                    style={{ borderRadius: "10px 10px 10px 10px / 50px 10px 50px 10px" }}
+                                >
+                                    {tab.icon} {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                    </nav>
+                </header>
+
+                <main className="flex flex-col items-center justify-center p-2 md:p-12 overflow-hidden bg-[#fdfbf7]">
+                    <div className="max-w-3xl w-full flex flex-col gap-8 text-center">
+                        <motion.div
+                            initial={{ y: -20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            className="space-y-4"
+                        >
+                            <h2 className="font-heading text-4xl md:text-6xl text-pencil">
+                                🪺 Easter Eggs & Secrets
+                            </h2>
+                            <p className="font-body text-xl md:text-2xl text-pencil/70 italic">
+                                “Because every fun project deserves hidden chaos.”
+                            </p>
+                        </motion.div>
+
+                        <SketchCard decoration="tape" className="bg-[#fff9c4]/30 text-left">
+                            <ul className="space-y-6 font-body text-xl md:text-2xl list-none">
+                                <motion.li whileHover={{ x: 5 }} className="flex gap-3 items-start">
+                                    <span className="text-2xl mt-1">🦇</span>
+                                    <span>Type: <strong className="font-heading text-marker-blue">i am batman</strong> → Dark Gotham mode</span>
+                                </motion.li>
+                                <motion.li whileHover={{ x: 5 }} className="flex gap-3 items-start">
+                                    <span className="text-2xl mt-1">🐱</span>
+                                    <span>Type: <strong className="font-heading text-orange-600">meow</strong> → Orange cat mode</span>
+                                </motion.li>
+                                <motion.li whileHover={{ x: 5 }} className="flex gap-3 items-start">
+                                    <span className="text-2xl mt-1">🧠</span>
+                                    <span>Type: <strong className="font-heading text-green-600">sudo make me cool</strong></span>
+                                </motion.li>
+                                <motion.li whileHover={{ x: 5 }} className="flex gap-3 items-start">
+                                    <span className="text-2xl mt-1">🎯</span>
+                                    <span>Click the pRojEctCaSE logo <strong className="font-heading text-marker-red">3 times</strong></span>
+                                </motion.li>
+                            </ul>
+                        </SketchCard>
+
+                        <div className="flex flex-col gap-4">
+                            <h3 className="font-heading text-3xl text-pencil underline decoration-wavy decoration-marker-blue">🔊 Chaos Soundboard</h3>
+                            <div className="flex gap-4 justify-center flex-wrap">
+                                <SketchButton
+                                    onClick={() => {
+                                        const sounds = ["/audio/fahh.mp3", "/audio/yoo.mp3"];
+                                        const randomSound = sounds[Math.floor(Math.random() * sounds.length)];
+                                        new Audio(randomSound).play();
+                                    }}
+                                    className="bg-marker-red text-white w-full md:w-auto"
+                                    size="lg"
+                                >
+                                    Random Noise
+                                </SketchButton>
+                            </div>
+                        </div>
+
+                        <div className="font-body text-lg md:text-xl space-y-2 opacity-80">
+                            <h3 className="font-heading text-3xl mb-4 text-pencil underline decoration-wavy decoration-marker-yellow">About pRojEctCaSE</h3>
+                            <div className="bg-pencil/5 p-6 rounded-2xl border-2 border-pencil/10">
+                                <p>I made this project just to learn Git and GitHub.</p>
+                                <p>Then it got fun.</p>
+                                <p>Then it got chaotic.</p>
+                                <p>Then it became this.</p>
+                            </div>
+
+                            <div className="mt-8 p-6 border-2 border-dashed border-pencil/30 rounded-2xl w-full hover:bg-white/50 transition-colors">
+                                <p className="mb-2">If you want to develop this further or mess around with the code:</p>
+                                <a
+                                    href="mailto:muqeethshaikabdul@gmail.com"
+                                    className="text-marker-blue hover:text-marker-red transition-colors font-bold text-xl md:text-2xl break-all"
+                                >
+                                    📩 muqeethshaikabdul@gmail.com
+                                </a>
+                                <p className="mt-4 text-sm opacity-70">
+                                    No pressure.<br />Just code and curiosity.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="pt-8">
+                            <SketchButton onClick={() => setActiveTab("encode")} variant="accent" size="lg" className="w-full md:w-auto">
+                                <ChevronRight className="rotate-180 inline mr-2" /> Back to Encode
+                            </SketchButton>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        )
+    }
+
+    return (
+        <div className="min-h-screen p-4 md:p-8 flex flex-col gap-6 md:gap-8 max-w-7xl mx-auto">
+            {/* Easter Egg Elements */}
+            {activeTheme === "batman" && (
+                <>
+                    <div className="batman-vignette" />
+                    <div className="batman-msg">Then act like it.</div>
+                </>
+            )}
+            {activeTheme === "cat" && (
+                <>
+                    <img src="/images/doodles/cat.png" className="peek-icon cat-peek show" alt="Peeking Cat" />
+                    <div className="cat-msg">You have summoned the orange brain cell 🐱</div>
+                </>
+            )}
+
+            <img
+                src="/images/doodles/bat.png"
+                className={`peek-icon bat-peek ${activeTheme === "batman" ? "show" : ""}`}
+                alt="Peeking Batman"
+            />
+
+            {/* Header */}
+            <header className="flex flex-col md:flex-row justify-between items-center gap-4 relative">
+                <div className="flex flex-col items-center md:items-start text-center md:text-left">
+                    <h1
+                        onClick={handleLogoClick}
+                        className={`font-heading text-4xl underline decoration-marker-red decoration-4 cursor-pointer select-none transition-all ${madnessMode ? "shake-crazy text-xs font-mono no-underline whitespace-pre" : ""}`}
+                    >
+                        {madnessMode ? `
+ ____  ____   ___    ___  _____ 
+|  _ \\|  _ \\ / _ \\  / _ \\| ____|
+| |_) | |_) | | | || | | |  _|  
+|  __/|  _ <| |_| || |_| | |___ 
+|_|   |_| \\_\\\\___/  \\___/|_____|
+` : "pRojEctCaSE Lab"}
+                    </h1>
+                    {madnessMode && <span className="stop-poking-msg text-sm mt-2">STOP POKING ME 😭</span>}
+                </div>
+
+                <nav className="w-full md:w-auto">
+                    {/* Mobile Dropdown */}
+                    <div className="md:hidden w-full px-2">
+                        <div className="relative group">
+                            <select
+                                className="w-full bg-white border-[3px] border-pencil p-4 pr-10 font-heading text-xl appearance-none rounded-2xl shadow-hard-sm focus:outline-none focus:border-marker-blue transition-all active:scale-[0.98]"
+                                value={activeTab}
+                                onChange={(e) => setActiveTab(e.target.value as LabTab)}
+                                style={{ borderRadius: "12px 125px 12px 105px / 12px 12px 125px 105px" }}
+                            >
+                                {tabs.map(tab => <option key={tab.id} value={tab.id}>{tab.label}</option>)}
+                            </select>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-marker-red animate-pulse">
+                                <ChevronRight className="rotate-90" size={24} />
+                            </div>
+                        </div>
+                    </div>
+                    {/* Desktop Tabs */}
+                    <div className="hidden md:flex flex-wrap gap-2">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as LabTab)}
+                                className={`
+                    flex items-center gap-2 px-4 py-2 font-body text-lg border-2 border-pencil transition-all
+                    ${activeTab === tab.id ? "bg-pencil text-white -rotate-1 shadow-hard-sm" : "bg-white hover:bg-paper-muted"}
+                  `}
+                                style={{ borderRadius: "10px 10px 10px 10px / 50px 10px 50px 10px" }}
+                            >
+                                {tab.icon} {tab.label}
+                            </button>
+                        ))}
+                    </div>
                 </nav>
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-grow">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 flex-grow">
                 {/* Input Section */}
                 <section className="flex flex-col gap-4">
                     <div className="flex justify-between items-end">
                         <h2 className="font-heading text-2xl">Input</h2>
                         <div className="flex gap-2">
-                            <SketchButton variant="ghost" size="sm" onClick={clear} className="text-marker-red">
-                                <Trash2 size={18} />
+                            <SketchButton variant="ghost" size="sm" onClick={clear} className="text-marker-red h-[44px] w-[44px] flex items-center justify-center">
+                                <Trash2 size={24} />
                             </SketchButton>
                         </div>
                     </div>
                     <SketchTextarea
                         placeholder="Type or paste something here..."
-                        className="flex-grow min-h-[300px]"
+                        className="flex-grow min-h-[180px] md:min-h-[300px] w-full text-lg"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                     />
-                    <div className="flex gap-4 font-mono text-xs opacity-50 px-2">
-                        <span>CHARS: {stats.charCount}</span>
-                        <span>WORDS: {stats.wordCount}</span>
+                    <div className="flex flex-wrap gap-4 font-mono text-xs opacity-50 px-2 group">
+                        {/* Stats hidden on very small screens unless focused/tapped, simpler display */}
+                        <div className="flex gap-4">
+                            <span>CHARS: {stats.charCount}</span>
+                            <span>WORDS: {stats.wordCount}</span>
+                        </div>
                         <span>LINES: {stats.lineCount}</span>
                     </div>
                 </section>
@@ -137,17 +410,17 @@ export default function LabPage() {
                     <div className="flex justify-between items-end">
                         <h2 className="font-heading text-2xl text-marker-blue">Output</h2>
                         <div className="flex gap-2">
-                            <SketchButton variant="secondary" size="sm" onClick={handleDownload}>
-                                <Download size={18} />
+                            <SketchButton variant="secondary" size="sm" onClick={handleDownload} className="h-[44px] w-[44px] flex items-center justify-center">
+                                <Download size={24} />
                             </SketchButton>
-                            <SketchButton variant="primary" size="sm" onClick={handleCopy}>
-                                {copied ? "Copied!" : <Copy size={18} />}
+                            <SketchButton variant="primary" size="sm" onClick={handleCopy} className="h-[44px] min-w-[44px] flex items-center justify-center">
+                                {copied ? "Copied!" : <Copy size={24} />}
                             </SketchButton>
                         </div>
                     </div>
                     <SketchTextarea
                         readOnly
-                        className="flex-grow min-h-[300px] bg-paper-muted/30"
+                        className="flex-grow min-h-[180px] md:min-h-[300px] bg-paper-muted/30 w-full text-lg"
                         value={output}
                         placeholder="Output will appear here..."
                     />
@@ -162,21 +435,21 @@ export default function LabPage() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
                     >
                         {activeTab === "encode" && (
                             <>
-                                <SketchButton onClick={() => runEncoder(Encoders.base64Encode)}>Base64 Encode</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Encoders.base64Decode)}>Base64 Decode</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Encoders.urlEncode)}>URL Encode</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Encoders.urlDecode)}>URL Decode</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Encoders.binaryEncode)}>Binary Encode</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Encoders.binaryDecode)}>Binary Decode</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Encoders.hexEncode)}>Hex Encode</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Encoders.hexDecode)}>Hex Decode</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Encoders.rot13)}>ROT13</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Encoders.caesarCipher)}>Caesar (Shift 3)</SketchButton>
-                                <SketchButton variant="accent" onClick={() => setOutput(Encoders.smartDecode(input))}>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.base64Encode)}>Base64 Encode</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.base64Decode)}>Base64 Decode</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.urlEncode)}>URL Encode</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.urlDecode)}>URL Decode</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.binaryEncode)}>Binary Encode</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.binaryDecode)}>Binary Decode</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.hexEncode)}>Hex Encode</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.hexDecode)}>Hex Decode</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.rot13)}>ROT13</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.caesarCipher)}>Caesar (Shift 3)</SketchButton>
+                                <SketchButton className="w-full justify-center col-span-1 sm:col-span-2 md:col-span-1" variant="accent" onClick={() => setOutput(Encoders.smartDecode(input))}>
                                     <RefreshCw className="mr-2" size={16} /> Auto Decode
                                 </SketchButton>
                             </>
@@ -184,36 +457,37 @@ export default function LabPage() {
 
                         {activeTab === "text" && (
                             <>
-                                <SketchButton onClick={() => runEncoder(Transformers.toLowerCase)}>lowercase</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Transformers.toUpperCase)}>UPPERCASE</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Transformers.toSentenceCase)}>Sentence case</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Transformers.toRandomCase)}>RaNdOm cAsE</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Transformers.reverseText)}>Reverse</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Transformers.shuffleText)}>Shuffle</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Transformers.spreadText)}>S p r e a d</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Transformers.numberLines)}>Number Lines</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Transformers.removeEmptyLines)}>Remove Empty Lines</SketchButton>
-                                <div className="col-span-2 flex gap-2">
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.toLowerCase)}>lowercase</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.toUpperCase)}>UPPERCASE</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.toSentenceCase)}>Sentence case</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.toRandomCase)}>RaNdOm cAsE</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.reverseText)}>Reverse</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.shuffleText)}>Shuffle</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.spreadText)}>S p r e a d</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.numberLines)}>Number Lines</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.removeEmptyLines)}>Rm Empty Lines</SketchButton>
+                                <div className="col-span-1 sm:col-span-2 flex flex-col sm:flex-row gap-2">
                                     <SketchInput placeholder="Find" value={findText} onChange={(e) => setFindText(e.target.value)} />
                                     <SketchInput placeholder="Replace" value={replaceText} onChange={(e) => setReplaceText(e.target.value)} />
-                                    <SketchButton onClick={() => setOutput(Transformers.findReplace(input, findText, replaceText))}>Go</SketchButton>
+                                    <SketchButton className="w-full sm:w-auto" onClick={() => setOutput(Transformers.findReplace(input, findText, replaceText))}>Go</SketchButton>
                                 </div>
                             </>
                         )}
 
                         {activeTab === "ascii" && (
                             <>
-                                <div className="col-span-2 flex flex-col gap-2">
+                                <div className="col-span-1 sm:col-span-2 flex flex-col gap-2">
                                     <label className="font-heading">Font</label>
                                     <select
-                                        className="bg-white border-2 border-pencil p-2 font-body"
+                                        className="bg-white border-[3px] border-pencil p-2 font-body text-xl rounded-xl h-[50px]"
                                         value={asciiFont}
                                         onChange={(e) => setAsciiFont(e.target.value)}
+                                        style={{ borderRadius: "10px 10px 10px 10px / 50px 10px 50px 10px" }}
                                     >
                                         {getASCIIFonts().map(f => <option key={f} value={f}>{f}</option>)}
                                     </select>
                                 </div>
-                                <SketchButton size="lg" variant="accent" onClick={handleASCII} className="col-span-2">
+                                <SketchButton size="lg" variant="accent" onClick={handleASCII} className="col-span-1 sm:col-span-2 w-full justify-center">
                                     Generate ASCII Art
                                 </SketchButton>
                             </>
@@ -221,29 +495,29 @@ export default function LabPage() {
 
                         {activeTab === "dev" && (
                             <>
-                                <SketchButton onClick={() => runEncoder(Escapes.escapeJSON)}>JSON Escape</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Escapes.unescapeJSON)}>JSON Unescape</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Escapes.escapeHTML)}>HTML Escape</SketchButton>
-                                <SketchButton onClick={() => runEncoder(Escapes.escapeCSV)}>CSV Escape</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Escapes.escapeJSON)}>JSON Escape</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Escapes.unescapeJSON)}>JSON Unescape</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Escapes.escapeHTML)}>HTML Escape</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Escapes.escapeCSV)}>CSV Escape</SketchButton>
                             </>
                         )}
 
                         {activeTab === "generators" && (
                             <>
-                                <SketchButton onClick={() => setOutput(Generators.generatePassword())}>Password</SketchButton>
-                                <SketchButton onClick={() => setOutput(Generators.generateUUID())}>UUID v4</SketchButton>
-                                <SketchButton onClick={() => setOutput(Generators.generateShortId())}>Short ID</SketchButton>
-                                <SketchButton onClick={() => setOutput(Generators.generateRollNumber())}>Roll Number</SketchButton>
-                                <SketchButton onClick={() => setOutput(Generators.generateUsername())}>Username</SketchButton>
-                                <SketchButton onClick={() => setOutput(Generators.generateLoremIpsum(3))}>Lorem Ipsum</SketchButton>
-                                <SketchButton onClick={() => setOutput(Generators.generateTestData("email"))}>Test Email</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => setOutput(Generators.generatePassword())}>Password</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => setOutput(Generators.generateUUID())}>UUID v4</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => setOutput(Generators.generateShortId())}>Short ID</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => setOutput(Generators.generateRollNumber())}>Roll Number</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => setOutput(Generators.generateUsername())}>Username</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => setOutput(Generators.generateLoremIpsum(3))}>Lorem Ipsum</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => setOutput(Generators.generateTestData("email"))}>Test Email</SketchButton>
                             </>
                         )}
                     </motion.div>
                 </AnimatePresence>
             </SketchCard>
 
-            <footer className="text-center opacity-30 font-mono text-xs py-4">
+            <footer className="text-center opacity-30 font-mono text-xs py-4 mb-4">
                 pRojEctCaSE // Text Lab // Manual Borders // No Straight Lines
             </footer>
         </div>

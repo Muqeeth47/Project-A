@@ -15,10 +15,10 @@ interface SketchInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export const SketchInput = ({ label, className, ...props }: SketchInputProps) => {
     return (
         <div className="flex flex-col gap-2 w-full">
-            {label && <label className="font-heading text-xl">{label}</label>}
+            {label && <label className="font-heading text-lg md:text-xl">{label}</label>}
             <input
                 className={cn(
-                    "bg-white border-[3px] border-pencil p-3 font-body text-lg focus:outline-none focus:border-marker-blue focus:ring-4 focus:ring-marker-blue/10 transition-all",
+                    "bg-white border-[3px] border-pencil p-2 md:p-3 font-body text-base md:text-lg focus:outline-none focus:border-marker-blue focus:ring-4 focus:ring-marker-blue/10 transition-all",
                     className
                 )}
                 style={{ borderRadius: "15px 15px 15px 15px / 125px 15px 125px 15px" }}
@@ -35,10 +35,10 @@ interface SketchTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaE
 export const SketchTextarea = ({ label, className, ...props }: SketchTextareaProps) => {
     return (
         <div className="flex flex-col gap-2 w-full">
-            {label && <label className="font-heading text-xl">{label}</label>}
+            {label && <label className="font-heading text-lg md:text-xl">{label}</label>}
             <textarea
                 className={cn(
-                    "bg-white border-[3px] border-pencil p-4 font-mono text-base focus:outline-none focus:border-marker-blue focus:ring-4 focus:ring-marker-blue/10 transition-all resize-none",
+                    "bg-white border-[3px] border-pencil p-3 md:p-4 font-mono text-sm md:text-base focus:outline-none focus:border-marker-blue focus:ring-4 focus:ring-marker-blue/10 transition-all resize-none",
                     className
                 )}
                 style={{ borderRadius: "15px 15px 15px 15px / 15px 125px 15px 125px" }}

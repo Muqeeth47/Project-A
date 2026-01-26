@@ -33,7 +33,7 @@ export default function LandingPage() {
                     transition={{ delay: 0.1 }}
                     className="font-body text-2xl md:text-3xl mb-12 text-pencil/70"
                 >
-                    A clean, developer-grade text transformation & encoding laboratory.
+                    Don't forget to check out the easter eggs 😉 !
                 </motion.p>
 
                 <motion.div
