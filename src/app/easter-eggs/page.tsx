@@ -49,8 +49,7 @@ export default function EasterEggsPage() {
                     <h2 className="font-heading text-3xl mb-4 text-pencil underline decoration-wavy decoration-marker-yellow">About pRojEctCaSE</h2>
                     <p>Hello there, Iam Shaik Abdul Muqeeth</p>
                     <p>I made this project just to learn Git and GitHub.</p>
-                    <p>Then it got fun.</p>
-                    <p>Then it got chaotic.</p>
+                    <p>It was fun.</p>
                     <p>Then it became this.</p>
 
                     <div className="mt-8 p-6 border-2 border-dashed border-pencil/30 rounded-2xl">

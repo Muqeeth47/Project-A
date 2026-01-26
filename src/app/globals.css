@@ -1,20 +1,5 @@
 @import "tailwindcss";
 
-@font-face {
-    font-family: 'Kalam';
-    src: url('https://fonts.googleapis.com/css2?family=Kalam:wght@700&display=swap');
-}
-
-@font-face {
-    font-family: 'Patrick Hand';
-    src: url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
-}
-
-@font-face {
-    font-family: 'JetBrains Mono';
-    src: url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-}
-
 @theme {
     --color-paper-light: #fdfbf7;
     --color-paper-muted: #e5e0d8;
@@ -24,8 +9,8 @@
     --color-marker-blue: #2d5da1;
     --color-marker-yellow: #fff9c4;
 
-    --font-heading: "Kalam", cursive;
-    --font-body: "Patrick Hand", cursive;
+    --font-heading: "Kalam", sans-serif;
+    --font-body: "Patrick Hand", sans-serif;
     --font-mono: "JetBrains Mono", monospace;
 
     --shadow-hard: 4px 4px 0px 0px #2d2d2d;
@@ -108,10 +93,25 @@ body.batman-mode {
     transform: translate(-50%, -50%);
     font-family: var(--font-heading);
     font-size: 4rem;
+    text-align: center;
     color: #ffd700;
     text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
     z-index: 9999;
     animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    width: 90%;
+    max-width: 800px;
+}
+
+@media (max-width: 768px) {
+    .batman-msg {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .batman-msg {
+        font-size: 1.8rem;
+    }
 }
 
 @keyframes fadeIn {
@@ -232,20 +232,30 @@ body.cat-mode button {
 
 .cat-msg {
     position: fixed;
-    top: 20%;
+    top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-family: var(--font-body);
-    font-size: 2rem;
+    font-family: var(--font-heading);
+    font-size: 4rem;
     color: #9a3412;
-    background: #ffedd5;
-    padding: 1rem 2rem;
-    border-radius: 999px;
-    border: 3px solid #9a3412;
-    box-shadow: 4px 4px 0px 0px #9a3412;
+    text-shadow: 0 0 20px rgba(154, 52, 18, 0.5);
     z-index: 9999;
-    animation: bounce 0.5s infinite alternate;
-    white-space: nowrap;
+    animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    width: 90%;
+    max-width: 800px;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .cat-msg {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .cat-msg {
+        font-size: 1.8rem;
+    }
 }
 
 @keyframes gentle-wiggle {
@@ -279,6 +289,18 @@ body.cat-mode button {
     transform: translateY(220px) rotate(180deg);
 }
 
+@media (max-width: 768px) {
+    .bat-peek {
+        width: 120px;
+        right: 15px;
+        top: -120px;
+    }
+
+    .bat-peek.show {
+        transform: translateY(140px) rotate(180deg);
+    }
+}
+
 .cat-peek {
     bottom: -180px;
     left: 30px;
@@ -287,4 +309,16 @@ body.cat-mode button {
 
 .cat-peek.show {
     transform: translateY(-200px) rotate(-10deg);
+}
+
+@media (max-width: 768px) {
+    .cat-peek {
+        width: 120px;
+        left: 15px;
+        bottom: -100px;
+    }
+
+    .cat-peek.show {
+        transform: translateY(-110px) rotate(-10deg);
+    }
 }

@@ -170,14 +170,17 @@ export default function LabPage() {
                             className={`font-heading text-3xl md:text-4xl underline decoration-marker-red decoration-4 cursor-pointer select-none transition-all ${madnessMode ? "shake-crazy text-xs font-mono no-underline whitespace-pre" : ""}`}
                         >
                             {madnessMode ? `
- ____  ____   ___    ___  _____ 
-|  _ \\|  _ \\ / _ \\  / _ \\| ____|
-| |_) | |_) | | | || | | |  _|  
-|  __/|  _ <| |_| || |_| | |___ 
-|_|   |_| \\_\\\\___/  \\___/|_____|
+███████╗████████╗ ██████╗ ██████╗   ██╗
+██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗  ██║
+███████╗   ██║   ██║   ██║██████╔╝  ██║
+╚════██║   ██║   ██║   ██║██╔═══╝   ╚═╝
+███████║   ██║   ╚██████╔╝██║       ██╗
+╚══════╝   ╚═╝    ╚═════╝ ╚═╝       ╚═╝
+
 ` : "pRojEctCaSE Lab"}
-                        </h1>
-                    </div>
+                    </h1>
+                    {madnessMode && <span className="stop-poking-msg text-sm mt-2">STOP POKING ME 😭</span>}
+                </div>
 
                     <nav className="w-full md:w-auto px-2">
                         {/* Mobile Dropdown */}
@@ -271,10 +274,10 @@ export default function LabPage() {
                         <div className="font-body text-lg md:text-xl space-y-2 opacity-80">
                             <h3 className="font-heading text-3xl mb-4 text-pencil underline decoration-wavy decoration-marker-yellow">About pRojEctCaSE</h3>
                             <div className="bg-pencil/5 p-6 rounded-2xl border-2 border-pencil/10">
-                                <p>I made this project just to learn Git and GitHub.</p>
-                                <p>Then it got fun.</p>
-                                <p>Then it got chaotic.</p>
-                                <p>Then it became this.</p>
+                                <p>Hello there, Iam Shaik Abdul Muqeeth</p>
+                    <p>I made this project just to learn Git and GitHub.</p>
+                    <p>It was funnn.</p>
+                    <p>Then it became this.</p>
                             </div>
 
                             <div className="mt-8 p-6 border-2 border-dashed border-pencil/30 rounded-2xl w-full hover:bg-white/50 transition-colors">
@@ -332,11 +335,13 @@ export default function LabPage() {
                         className={`font-heading text-4xl underline decoration-marker-red decoration-4 cursor-pointer select-none transition-all ${madnessMode ? "shake-crazy text-xs font-mono no-underline whitespace-pre" : ""}`}
                     >
                         {madnessMode ? `
- ____  ____   ___    ___  _____ 
-|  _ \\|  _ \\ / _ \\  / _ \\| ____|
-| |_) | |_) | | | || | | |  _|  
-|  __/|  _ <| |_| || |_| | |___ 
-|_|   |_| \\_\\\\___/  \\___/|_____|
+███████╗████████╗ ██████╗ ██████╗   ██╗
+██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗  ██║
+███████╗   ██║   ██║   ██║██████╔╝  ██║
+╚════██║   ██║   ██║   ██║██╔═══╝   ╚═╝
+███████║   ██║   ╚██████╔╝██║       ██╗
+╚══════╝   ╚═╝    ╚═════╝ ╚═╝       ╚═╝
+
 ` : "pRojEctCaSE Lab"}
                     </h1>
                     {madnessMode && <span className="stop-poking-msg text-sm mt-2">STOP POKING ME 😭</span>}

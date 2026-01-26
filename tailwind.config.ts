@@ -24,8 +24,8 @@ const config: Config = {
                 },
             },
             fontFamily: {
-                heading: ["Kalam", "cursive"],
-                body: ["Patrick Hand", "cursive"],
+                heading: ["Kalam", "sans-serif"],
+                body: ["Patrick Hand", "sans-serif"],
                 mono: ["JetBrains Mono", "monospace"],
             },
             boxShadow: {
