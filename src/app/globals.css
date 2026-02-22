@@ -191,6 +191,7 @@ body.batman-mode {
     color: var(--color-marker-red);
     font-weight: bold;
     font-family: var(--font-heading);
+    font-size: 0.875rem; /* same as text-sm, consistent across pages */
     animation: bounce 0.5s infinite alternate;
 }
 

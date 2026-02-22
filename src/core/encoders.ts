@@ -4,22 +4,31 @@
  */
 
 /**
- * Base64 Encode
+ * Base64 Encode (Unicode-safe)
  */
 export const base64Encode = (input: string): string => {
   try {
-    return btoa(input);
+    return btoa(
+      encodeURIComponent(input).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+        String.fromCharCode(parseInt(p1, 16))
+      )
+    );
   } catch (e) {
     return "Error: Invalid input for Base64 encoding";
   }
 };
 
 /**
- * Base64 Decode
+ * Base64 Decode (Unicode-safe)
  */
 export const base64Decode = (input: string): string => {
   try {
-    return atob(input);
+    return decodeURIComponent(
+      atob(input)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
   } catch (e) {
     return "Error: Invalid Base64 string";
   }

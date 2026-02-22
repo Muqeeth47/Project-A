@@ -12,10 +12,13 @@ export const escapeJSON = (input: string): string => {
 
 /**
  * Unescape from JSON (Decode)
+ * Always returns a string for display (stringifies objects/arrays/numbers).
  */
 export const unescapeJSON = (input: string): string => {
     try {
-        return JSON.parse(input);
+        const parsed = JSON.parse(input);
+        if (typeof parsed === "string") return parsed;
+        return JSON.stringify(parsed, null, 2);
     } catch (e) {
         return "Error: Invalid JSON string";
     }

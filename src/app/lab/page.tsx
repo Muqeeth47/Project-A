@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SketchButton } from "@/components/SketchButton";
 import { SketchCard } from "@/components/SketchCard";
@@ -66,20 +66,35 @@ export default function LabPage() {
     // Easter Egg State
     const [logoClicks, setLogoClicks] = useState(0);
     const [madnessMode, setMadnessMode] = useState(false);
+    const [showInfiniteVoidOverlay, setShowInfiniteVoidOverlay] = useState(false);
+    const infiniteVoidVideoRef = useRef<HTMLVideoElement>(null);
+    const infiniteVoidAudioRef = useRef<HTMLAudioElement | null>(null);
+
+    const [showSukunaOverlay, setShowSukunaOverlay] = useState(false);
+    const sukunaVideoRef = useRef<HTMLVideoElement>(null);
 
     const [activeTheme, setActiveTheme] = useState<"batman" | "cat" | null>(null);
+    const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
 
-    // Easter Egg: Check Modes
+    const handleCopyCommand = async (command: string) => {
+        const ok = await copyToClipboard(command);
+        if (ok) {
+            setCopiedCommand(command);
+            setTimeout(() => setCopiedCommand(null), 2000);
+        }
+    };
+
+    // Normalized input for special prompts (lowercase + trim)
+    const normalizedInput = input.toLowerCase().trim();
+
+    // Easter Egg: Check Modes — clear immediately when trigger text is removed or changed
     useEffect(() => {
-        const lowerInput = input.toLowerCase();
-
-        // Helper to clear modes
         const clearModes = () => {
             setActiveTheme(null);
             document.body.classList.remove("batman-mode", "cat-mode");
         };
 
-        if (lowerInput === "i am batman") {
+        if (normalizedInput === "i am batman") {
             setActiveTheme("batman");
             document.body.classList.add("batman-mode");
             new Audio("/audio/batman.mp3").play().catch(() => { });
@@ -87,21 +102,71 @@ export default function LabPage() {
             return () => clearTimeout(timer);
         }
 
-        if (lowerInput === "meow") {
+        if (normalizedInput === "meow") {
             setActiveTheme("cat");
             document.body.classList.add("cat-mode");
             new Audio("/audio/meow.mp3").play().catch(() => { });
             const timer = setTimeout(clearModes, 5000);
             return () => clearTimeout(timer);
         }
-    }, [input]);
+
+        // Input no longer matches any trigger — return to normal mode right away
+        clearModes();
+    }, [input, normalizedInput]);
 
     // Easter Egg: Cool Command (Reactive)
     useEffect(() => {
-        if (input === "sudo make me cool") {
+        if (normalizedInput === "sudo make me cool") {
             setOutput("You were already cool 😎");
         }
-    }, [input]);
+    }, [input, normalizedInput]);
+
+    // Easter Egg: Infinite Void — full-page video overlay + Gojo audio
+    useEffect(() => {
+        if (normalizedInput === "infinite void") {
+            setShowInfiniteVoidOverlay(true);
+        }
+    }, [input, normalizedInput]);
+
+    useEffect(() => {
+        if (!showInfiniteVoidOverlay) {
+            if (infiniteVoidAudioRef.current) {
+                infiniteVoidAudioRef.current.pause();
+                infiniteVoidAudioRef.current = null;
+            }
+            return;
+        }
+        const video = infiniteVoidVideoRef.current;
+        if (video) {
+            video.currentTime = 0;
+            video.muted = true;
+            video.play().catch(() => {});
+        }
+        const audio = new Audio("/audio/Gojo_infinite_void_domain_expansion_128KBPS.mp4");
+        infiniteVoidAudioRef.current = audio;
+        audio.play().catch(() => {});
+        return () => {
+            audio.pause();
+            infiniteVoidAudioRef.current = null;
+        };
+    }, [showInfiniteVoidOverlay]);
+
+    // Easter Egg: Fukuma Mizushi — Sukuna full-page video overlay (video’s own audio)
+    useEffect(() => {
+        if (normalizedInput === "fukuma mizushi") {
+            setShowSukunaOverlay(true);
+        }
+    }, [input, normalizedInput]);
+
+    useEffect(() => {
+        if (!showSukunaOverlay) return;
+        const video = sukunaVideoRef.current;
+        if (video) {
+            video.currentTime = 0;
+            video.muted = false;
+            video.play().catch(() => {});
+        }
+    }, [showSukunaOverlay]);
 
     // Easter Egg: Logo Click
     const handleLogoClick = () => {
@@ -119,7 +184,7 @@ export default function LabPage() {
     };
 
     const isCoolBypass = () => {
-        if (input === "sudo make me cool") {
+        if (normalizedInput === "sudo make me cool") {
             setOutput("You were already cool 😎");
             return true;
         }
@@ -146,7 +211,7 @@ export default function LabPage() {
             const res = await generateASCII(input || "CASE", asciiFont as any);
             setOutput(res);
         } catch (err) {
-            setOutput(err as string);
+            setOutput(err instanceof Error ? err.message : String(err));
         }
     };
 
@@ -162,6 +227,85 @@ export default function LabPage() {
     if (activeTab === "easter eggs") {
         return (
             <div className="min-h-screen p-4 md:p-8 flex flex-col gap-8 max-w-7xl mx-auto">
+                {/* Infinite Void overlay (same as main lab) */}
+                <AnimatePresence>
+                    {showInfiniteVoidOverlay && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 cursor-pointer"
+                            onClick={() => setShowInfiniteVoidOverlay(false)}
+                        >
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.25 }}
+                                className="absolute inset-0 w-full h-full"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <video
+                                    ref={infiniteVoidVideoRef}
+                                    src="/video/Video%20Project%204.mp4"
+                                    className="absolute inset-0 w-full h-full object-cover opacity-80"
+                                    playsInline
+                                    muted
+                                    onEnded={() => setShowInfiniteVoidOverlay(false)}
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            </motion.div>
+                            <button
+                                type="button"
+                                aria-label="Close"
+                                className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white font-heading text-xl transition-colors"
+                                onClick={() => setShowInfiniteVoidOverlay(false)}
+                            >
+                                ×
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                {/* Sukuna (Fukuma Mizushi) overlay */}
+                <AnimatePresence>
+                    {showSukunaOverlay && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 cursor-pointer"
+                            onClick={() => setShowSukunaOverlay(false)}
+                        >
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.25 }}
+                                className="absolute inset-0 w-full h-full"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <video
+                                    ref={sukunaVideoRef}
+                                    src="/video/sukuna.mp4"
+                                    className="absolute inset-0 w-full h-full object-cover opacity-80"
+                                    playsInline
+                                    onEnded={() => setShowSukunaOverlay(false)}
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            </motion.div>
+                            <button
+                                type="button"
+                                aria-label="Close"
+                                className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white font-heading text-xl transition-colors"
+                                onClick={() => setShowSukunaOverlay(false)}
+                            >
+                                ×
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
                 {/* Header to maintain context */}
                 <header className="flex flex-col md:flex-row justify-between items-center gap-6 relative">
                     <div className="flex flex-col items-center md:items-start text-center md:text-left">
@@ -233,23 +377,47 @@ export default function LabPage() {
                             </p>
                         </motion.div>
 
-                        <SketchCard decoration="tape" className="bg-[#fff9c4]/30 text-left">
-                            <ul className="space-y-6 font-body text-xl md:text-2xl list-none">
-                                <motion.li whileHover={{ x: 5 }} className="flex gap-3 items-start">
-                                    <span className="text-2xl mt-1">🦇</span>
-                                    <span>Type: <strong className="font-heading text-marker-blue">i am batman</strong> → Dark Gotham mode</span>
+                        <SketchCard decoration="tape" className="bg-[#fff9c4]/30 text-left p-4 md:p-6">
+                            <p className="font-heading text-base md:text-xl text-pencil mb-3 md:mb-4">Type these in the Lab input</p>
+                            <ul className="space-y-4 md:space-y-6 font-body text-base md:text-xl list-none">
+                                <motion.li whileHover={{ x: 5 }} className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 group">
+                                    <span className="flex gap-2 md:gap-3 items-start flex-1 min-w-0">
+                                        <span className="text-xl md:text-2xl mt-0.5 shrink-0">🦇</span>
+                                        <span className="min-w-0">Type: <strong className="font-heading text-marker-blue">i am batman</strong> → Dark Gotham mode</span>
+                                    </span>
+                                    <button type="button" onClick={() => handleCopyCommand("i am batman")} className="self-start sm:self-center flex items-center gap-1 min-h-[44px] min-w-[44px] px-3 py-2 rounded border-2 border-pencil/30 hover:border-pencil hover:bg-paper-muted transition-colors opacity-90 sm:opacity-70 sm:group-hover:opacity-100 touch-manipulation" title="Copy command"><Copy size={20} />{copiedCommand === "i am batman" && <span className="text-xs sm:text-sm whitespace-nowrap">Copied!</span>}</button>
                                 </motion.li>
-                                <motion.li whileHover={{ x: 5 }} className="flex gap-3 items-start">
-                                    <span className="text-2xl mt-1">🐱</span>
-                                    <span>Type: <strong className="font-heading text-orange-600">meow</strong> → Orange cat mode</span>
+                                <motion.li whileHover={{ x: 5 }} className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 group">
+                                    <span className="flex gap-2 md:gap-3 items-start flex-1 min-w-0">
+                                        <span className="text-xl md:text-2xl mt-0.5 shrink-0">🐱</span>
+                                        <span className="min-w-0">Type: <strong className="font-heading text-orange-600">meow</strong> → Orange cat mode</span>
+                                    </span>
+                                    <button type="button" onClick={() => handleCopyCommand("meow")} className="self-start sm:self-center flex items-center gap-1 min-h-[44px] min-w-[44px] px-3 py-2 rounded border-2 border-pencil/30 hover:border-pencil hover:bg-paper-muted transition-colors opacity-90 sm:opacity-70 sm:group-hover:opacity-100 touch-manipulation" title="Copy command"><Copy size={20} />{copiedCommand === "meow" && <span className="text-xs sm:text-sm whitespace-nowrap">Copied!</span>}</button>
                                 </motion.li>
-                                <motion.li whileHover={{ x: 5 }} className="flex gap-3 items-start">
-                                    <span className="text-2xl mt-1">🧠</span>
-                                    <span>Type: <strong className="font-heading text-green-600">sudo make me cool</strong></span>
+                                <motion.li whileHover={{ x: 5 }} className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 group">
+                                    <span className="flex gap-2 md:gap-3 items-start flex-1 min-w-0">
+                                        <span className="text-xl md:text-2xl mt-0.5 shrink-0">🧠</span>
+                                        <span className="min-w-0">Type: <strong className="font-heading text-green-600">sudo make me cool</strong></span>
+                                    </span>
+                                    <button type="button" onClick={() => handleCopyCommand("sudo make me cool")} className="self-start sm:self-center flex items-center gap-1 min-h-[44px] min-w-[44px] px-3 py-2 rounded border-2 border-pencil/30 hover:border-pencil hover:bg-paper-muted transition-colors opacity-90 sm:opacity-70 sm:group-hover:opacity-100 touch-manipulation" title="Copy command"><Copy size={20} />{copiedCommand === "sudo make me cool" && <span className="text-xs sm:text-sm whitespace-nowrap">Copied!</span>}</button>
                                 </motion.li>
-                                <motion.li whileHover={{ x: 5 }} className="flex gap-3 items-start">
-                                    <span className="text-2xl mt-1">🎯</span>
-                                    <span>Click the pRojEctCaSE logo <strong className="font-heading text-marker-red">3 times</strong></span>
+                                <motion.li whileHover={{ x: 5 }} className="flex gap-2 md:gap-3 items-start">
+                                    <span className="text-xl md:text-2xl mt-0.5 shrink-0">🎯</span>
+                                    <span className="min-w-0">Click the pRojEctCaSE logo <strong className="font-heading text-marker-red">3 times</strong></span>
+                                </motion.li>
+                                <motion.li whileHover={{ x: 5 }} className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 group">
+                                    <span className="flex gap-2 md:gap-3 items-start flex-1 min-w-0">
+                                        <span className="text-xl md:text-2xl mt-0.5 shrink-0">🌀</span>
+                                        <span className="min-w-0">Type: <strong className="font-heading text-purple-600">infinite void</strong> → Full-page video overlay</span>
+                                    </span>
+                                    <button type="button" onClick={() => handleCopyCommand("infinite void")} className="self-start sm:self-center flex items-center gap-1 min-h-[44px] min-w-[44px] px-3 py-2 rounded border-2 border-pencil/30 hover:border-pencil hover:bg-paper-muted transition-colors opacity-90 sm:opacity-70 sm:group-hover:opacity-100 touch-manipulation" title="Copy command"><Copy size={20} />{copiedCommand === "infinite void" && <span className="text-xs sm:text-sm whitespace-nowrap">Copied!</span>}</button>
+                                </motion.li>
+                                <motion.li whileHover={{ x: 5 }} className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 group">
+                                    <span className="flex gap-2 md:gap-3 items-start flex-1 min-w-0">
+                                        <span className="text-xl md:text-2xl mt-0.5 shrink-0">🔴</span>
+                                        <span className="min-w-0">Type: <strong className="font-heading text-red-700">Fukuma Mizushi</strong> → Sukuna video overlay</span>
+                                    </span>
+                                    <button type="button" onClick={() => handleCopyCommand("Fukuma Mizushi")} className="self-start sm:self-center flex items-center gap-1 min-h-[44px] min-w-[44px] px-3 py-2 rounded border-2 border-pencil/30 hover:border-pencil hover:bg-paper-muted transition-colors opacity-90 sm:opacity-70 sm:group-hover:opacity-100 touch-manipulation" title="Copy command"><Copy size={20} />{copiedCommand === "Fukuma Mizushi" && <span className="text-xs sm:text-sm whitespace-nowrap">Copied!</span>}</button>
                                 </motion.li>
                             </ul>
                         </SketchCard>
@@ -307,6 +475,87 @@ export default function LabPage() {
 
     return (
         <div className="min-h-screen p-4 md:p-8 flex flex-col gap-6 md:gap-8 max-w-7xl mx-auto">
+            {/* Infinite Void — full-page video overlay */}
+            <AnimatePresence>
+                {showInfiniteVoidOverlay && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 cursor-pointer"
+                        onClick={() => setShowInfiniteVoidOverlay(false)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.25 }}
+                            className="absolute inset-0 w-full h-full"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <video
+                                ref={infiniteVoidVideoRef}
+                                src="/video/Video%20Project%204.mp4"
+                                className="absolute inset-0 w-full h-full object-cover opacity-80"
+                                playsInline
+                                muted
+                                onEnded={() => setShowInfiniteVoidOverlay(false)}
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        </motion.div>
+                        <button
+                            type="button"
+                            aria-label="Close"
+                            className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white font-heading text-xl transition-colors"
+                            onClick={() => setShowInfiniteVoidOverlay(false)}
+                        >
+                            ×
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Sukuna (Fukuma Mizushi) — full-page video overlay */}
+            <AnimatePresence>
+                {showSukunaOverlay && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 cursor-pointer"
+                        onClick={() => setShowSukunaOverlay(false)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.25 }}
+                            className="absolute inset-0 w-full h-full"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <video
+                                ref={sukunaVideoRef}
+                                src="/video/sukuna.mp4"
+                                className="absolute inset-0 w-full h-full object-cover opacity-80"
+                                playsInline
+                                onEnded={() => setShowSukunaOverlay(false)}
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        </motion.div>
+                        <button
+                            type="button"
+                            aria-label="Close"
+                            className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white font-heading text-xl transition-colors"
+                            onClick={() => setShowSukunaOverlay(false)}
+                        >
+                            ×
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Easter Egg Elements */}
             {activeTheme === "batman" && (
                 <>
@@ -503,6 +752,7 @@ export default function LabPage() {
                                 <SketchButton className="w-full justify-center" onClick={() => runEncoder(Escapes.escapeJSON)}>JSON Escape</SketchButton>
                                 <SketchButton className="w-full justify-center" onClick={() => runEncoder(Escapes.unescapeJSON)}>JSON Unescape</SketchButton>
                                 <SketchButton className="w-full justify-center" onClick={() => runEncoder(Escapes.escapeHTML)}>HTML Escape</SketchButton>
+                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Escapes.unescapeHTML)}>HTML Unescape</SketchButton>
                                 <SketchButton className="w-full justify-center" onClick={() => runEncoder(Escapes.escapeCSV)}>CSV Escape</SketchButton>
                             </>
                         )}
