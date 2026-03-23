@@ -19,8 +19,9 @@ import {
     Sparkles
 } from "lucide-react";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useParams, useRouter } from "next/navigation";
 import { InstructionToast } from "@/components/InstructionToast";
+import Link from "next/link";
 
 // Import logic
 import * as Encoders from "@/core/encoders";
@@ -33,8 +34,11 @@ import { copyToClipboard, downloadFile, getTextStats } from "@/core/utils";
 type LabTab = "encode" | "text" | "ascii" | "dev" | "generators" | "easter eggs";
 
 export default function LabPage() {
+    const params = useParams();
+    const router = useRouter();
+    const toolParam = (params?.tool as string || "").toLowerCase();
     const searchParams = useSearchParams();
-    const featureParam = (searchParams.get("feature") ?? searchParams.get("tab") ?? "").toLowerCase().trim();
+    const featureParam = (toolParam || (searchParams.get("feature") ?? searchParams.get("tab") ?? "")).toLowerCase().trim();
 
     const tabFromFeature = (feature: string): LabTab => {
         switch (feature) {
@@ -50,6 +54,7 @@ export default function LabPage() {
             case "generators":
                 return "generators";
             case "secrets":
+            case "easter eggs":
                 return "easter eggs";
             default:
                 return "encode";
@@ -59,8 +64,19 @@ export default function LabPage() {
     const [activeTab, setActiveTab] = useState<LabTab>(() => tabFromFeature(featureParam));
     useEffect(() => {
         setActiveTab(tabFromFeature(featureParam));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [featureParam]);
+
+    const handleTabChange = (id: LabTab) => {
+        const pathMap: Record<LabTab, string> = {
+            "encode": "encode",
+            "text": "text",
+            "ascii": "ascii",
+            "dev": "devtools",
+            "generators": "generators",
+            "easter eggs": "secrets"
+        };
+        router.push(`/${pathMap[id]}`);
+    };
 
     const instruction = (() => {
         switch (featureParam) {
@@ -284,7 +300,11 @@ export default function LabPage() {
         return (
             <div className="min-h-screen p-4 md:p-8 flex flex-col gap-8 max-w-7xl mx-auto">
                 {instruction && (
-                    <InstructionToast title={instruction.title} text={instruction.text} />
+                    <InstructionToast 
+                        title={instruction.title} 
+                        text={instruction.text} 
+                        featureId={activeTab} 
+                    />
                 )}
                 {/* Infinite Void overlay (same as main lab) */}
                 <AnimatePresence>
@@ -368,8 +388,13 @@ export default function LabPage() {
                 {/* Header to maintain context */}
                 <header className="flex flex-col md:flex-row justify-between items-center gap-6 relative">
                     <div className="flex flex-col items-center md:items-start text-center md:text-left">
+                    <Link href="/" className="hover:opacity-80 transition-opacity">
                         <h1
-                            onClick={handleLogoClick}
+                            onClick={(e) => {
+                                // Prevent link navigation if it's a madness mode click (well, actually we can just let it navigate if they want)
+                                // But handleLogoClick is for easter eggs
+                                handleLogoClick();
+                            }}
                             className={`font-heading text-3xl md:text-4xl underline decoration-marker-red decoration-4 cursor-pointer select-none transition-all ${madnessMode ? "shake-crazy text-xs font-mono no-underline whitespace-pre" : ""}`}
                         >
                             {madnessMode ? `
@@ -381,7 +406,8 @@ export default function LabPage() {
 ╚══════╝   ╚═╝    ╚═════╝ ╚═╝       ╚═╝
 
 ` : "pRojEctCaSE Lab"}
-                    </h1>
+                        </h1>
+                    </Link>
                     {madnessMode && <span className="stop-poking-msg text-sm mt-2">STOP POKING ME 😭</span>}
                 </div>
 
@@ -392,7 +418,7 @@ export default function LabPage() {
                                 <select
                                     className="w-full bg-white border-[3px] border-pencil p-4 pr-10 font-heading text-xl appearance-none rounded-2xl shadow-hard-sm focus:outline-none focus:border-marker-blue transition-all active:scale-[0.98]"
                                     value={activeTab}
-                                    onChange={(e) => setActiveTab(e.target.value as LabTab)}
+                                    onChange={(e) => handleTabChange(e.target.value as LabTab)}
                                     style={{ borderRadius: "125px 12px 105px 12px / 12px 125px 12px 105px" }}
                                 >
                                     {tabs.map(tab => <option key={tab.id} value={tab.id}>{tab.label}</option>)}
@@ -407,7 +433,7 @@ export default function LabPage() {
                             {tabs.map((tab) => (
                                 <button
                                     key={tab.id}
-                                    onClick={() => setActiveTab(tab.id as LabTab)}
+                                    onClick={() => handleTabChange(tab.id as LabTab)}
                                     className={`
                         flex items-center gap-2 px-4 py-2 font-body text-lg border-2 border-pencil transition-all
                         ${activeTab === tab.id ? "bg-pencil text-white -rotate-1 shadow-hard-sm" : "bg-white hover:bg-paper-muted"}
@@ -523,7 +549,7 @@ export default function LabPage() {
 
                         <div className="pt-8">
                             <SketchButton
-                                onClick={() => setActiveTab("encode")}
+                                onClick={() => handleTabChange("encode")}
                                 variant="accent"
                                 size="lg"
                                 className="w-full md:w-auto"
@@ -540,7 +566,11 @@ export default function LabPage() {
     return (
         <div className="min-h-screen p-4 md:p-8 flex flex-col gap-6 md:gap-8 max-w-7xl mx-auto">
             {instruction && (
-                <InstructionToast title={instruction.title} text={instruction.text} />
+                <InstructionToast 
+                    title={instruction.title} 
+                    text={instruction.text} 
+                    featureId={activeTab} 
+                />
             )}
             {/* Infinite Void — full-page video overlay */}
             <AnimatePresence>
@@ -644,13 +674,14 @@ export default function LabPage() {
             />
 
             {/* Header */}
-            <header className="flex flex-col md:flex-row justify-between items-center gap-4 relative">
+            <header className="flex flex-col md:flex-row justify-between items-center gap-6 relative">
                 <div className="flex flex-col items-center md:items-start text-center md:text-left">
-                    <h1
-                        onClick={handleLogoClick}
-                        className={`font-heading text-4xl underline decoration-marker-red decoration-4 cursor-pointer select-none transition-all ${madnessMode ? "shake-crazy text-xs font-mono no-underline whitespace-pre" : ""}`}
-                    >
-                        {madnessMode ? `
+                    <Link href="/" className="hover:opacity-80 transition-opacity">
+                        <h1
+                            onClick={handleLogoClick}
+                            className={`font-heading text-4xl underline decoration-marker-red decoration-4 cursor-pointer select-none transition-all ${madnessMode ? "shake-crazy text-xs font-mono no-underline whitespace-pre" : ""}`}
+                        >
+                            {madnessMode ? `
 ███████╗████████╗ ██████╗ ██████╗   ██╗
 ██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗  ██║
 ███████╗   ██║   ██║   ██║██████╔╝  ██║
@@ -659,7 +690,8 @@ export default function LabPage() {
 ╚══════╝   ╚═╝    ╚═════╝ ╚═╝       ╚═╝
 
 ` : "pRojEctCaSE Lab"}
-                    </h1>
+                        </h1>
+                    </Link>
                     {madnessMode && <span className="stop-poking-msg text-sm mt-2">STOP POKING ME 😭</span>}
                 </div>
 
@@ -670,7 +702,7 @@ export default function LabPage() {
                             <select
                                 className="w-full bg-white border-[3px] border-pencil p-4 pr-10 font-heading text-xl appearance-none rounded-2xl shadow-hard-sm focus:outline-none focus:border-marker-blue transition-all active:scale-[0.98]"
                                 value={activeTab}
-                                onChange={(e) => setActiveTab(e.target.value as LabTab)}
+                                onChange={(e) => handleTabChange(e.target.value as LabTab)}
                                 style={{ borderRadius: "12px 125px 12px 105px / 12px 12px 125px 105px" }}
                             >
                                 {tabs.map(tab => <option key={tab.id} value={tab.id}>{tab.label}</option>)}
@@ -685,7 +717,7 @@ export default function LabPage() {
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id as LabTab)}
+                                onClick={() => handleTabChange(tab.id as LabTab)}
                                 className={`
                     flex items-center gap-2 px-4 py-2 font-body text-lg border-2 border-pencil transition-all
                     ${activeTab === tab.id ? "bg-pencil text-white -rotate-1 shadow-hard-sm" : "bg-white hover:bg-paper-muted"}
@@ -699,11 +731,11 @@ export default function LabPage() {
                     </nav>
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 flex-grow">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 flex-grow">
                 {/* Input Section */}
-                <section className="flex flex-col gap-4">
-                    <div className="flex justify-between items-end">
-                        <h2 className="font-heading text-2xl">Input</h2>
+                <section className="flex flex-col gap-3 md:gap-4">
+                    <div className="flex justify-between items-end px-1">
+                        <h2 className="font-heading text-xl md:text-2xl">Input</h2>
                         <div className="flex gap-2">
                             <SketchButton variant="ghost" size="sm" onClick={clear} className="text-marker-red h-[44px] w-[44px] flex items-center justify-center">
                                 <Trash2 size={24} />
@@ -727,9 +759,9 @@ export default function LabPage() {
                 </section>
 
                 {/* Output Section */}
-                <section className="flex flex-col gap-4">
-                    <div className="flex justify-between items-end">
-                        <h2 className="font-heading text-2xl text-marker-blue">Output</h2>
+                <section className="flex flex-col gap-3 md:gap-4">
+                    <div className="flex justify-between items-end px-1">
+                        <h2 className="font-heading text-xl md:text-2xl text-marker-blue">Output</h2>
                         <div className="flex gap-2">
                             <SketchButton variant="secondary" size="sm" onClick={handleDownload} className="h-[44px] w-[44px] flex items-center justify-center">
                                 <Download size={24} />
@@ -756,21 +788,21 @@ export default function LabPage() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                        className="flex flex-wrap gap-3 md:gap-4"
                     >
                         {activeTab === "encode" && (
                             <>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.base64Encode)}>Base64 Encode</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.base64Decode)}>Base64 Decode</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.urlEncode)}>URL Encode</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.urlDecode)}>URL Decode</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.binaryEncode)}>Binary Encode</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.binaryDecode)}>Binary Decode</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.hexEncode)}>Hex Encode</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.hexDecode)}>Hex Decode</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.rot13)}>ROT13</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Encoders.caesarCipher)}>Caesar (Shift 3)</SketchButton>
-                                <SketchButton className="w-full justify-center col-span-1 sm:col-span-2 md:col-span-1" variant="accent" onClick={() => setOutput(Encoders.smartDecode(input))}>
+                                <SketchButton className="flex-1 min-w-[140px] md:min-w-[180px] justify-center" onClick={() => runEncoder(Encoders.base64Encode)}>Base64 Encode</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] md:min-w-[180px] justify-center" onClick={() => runEncoder(Encoders.base64Decode)}>Base64 Decode</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] md:min-w-[180px] justify-center" onClick={() => runEncoder(Encoders.urlEncode)}>URL Encode</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] md:min-w-[180px] justify-center" onClick={() => runEncoder(Encoders.urlDecode)}>URL Decode</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] md:min-w-[180px] justify-center" onClick={() => runEncoder(Encoders.binaryEncode)}>Binary Encode</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] md:min-w-[180px] justify-center" onClick={() => runEncoder(Encoders.binaryDecode)}>Binary Decode</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] md:min-w-[180px] justify-center" onClick={() => runEncoder(Encoders.hexEncode)}>Hex Encode</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] md:min-w-[180px] justify-center" onClick={() => runEncoder(Encoders.hexDecode)}>Hex Decode</SketchButton>
+                                <SketchButton className="flex-1 min-w-[120px] md:min-w-[140px] justify-center" onClick={() => runEncoder(Encoders.rot13)}>ROT13</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] md:min-w-[180px] justify-center" onClick={() => runEncoder(Encoders.caesarCipher)}>Caesar (Shift 3)</SketchButton>
+                                <SketchButton className="flex-1 min-w-[200px] justify-center" variant="accent" onClick={() => setOutput(Encoders.smartDecode(input))}>
                                     <RefreshCw className="mr-2" size={16} /> Auto Decode
                                 </SketchButton>
                             </>
