@@ -7,18 +7,34 @@ export function InstructionToast({
     title,
     text,
     durationMs = 4500,
+    featureId,
 }: {
     title?: string;
     text: string;
     durationMs?: number;
+    featureId?: string;
 }) {
-    const [open, setOpen] = useState(true);
+    const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        setOpen(true);
-        const t = setTimeout(() => setOpen(false), durationMs);
-        return () => clearTimeout(t);
-    }, [text, durationMs]);
+        if (!featureId) {
+            setOpen(true);
+            const t = setTimeout(() => setOpen(false), durationMs);
+            return () => clearTimeout(t);
+        }
+
+        const storageKey = `instruction_seen_${featureId}`;
+        const hasSeen = localStorage.getItem(storageKey);
+        
+        if (!hasSeen) {
+            setOpen(true);
+            localStorage.setItem(storageKey, "true");
+            const t = setTimeout(() => setOpen(false), durationMs);
+            return () => clearTimeout(t);
+        }
+    }, [text, durationMs, featureId]);
+
+    if (!open) return null;
 
     return (
         <AnimatePresence>
