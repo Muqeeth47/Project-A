@@ -40,27 +40,54 @@ export default function LandingPage() {
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.2 }}
-                    className="flex flex-col md:flex-row gap-6 justify-center items-center"
+                    className="flex flex-col gap-8 justify-center items-center"
                 >
                     <Link href="/lab">
                         <SketchButton size="lg" variant="accent" className="flex items-center gap-4">
                             Enter Lab <MoveRight />
                         </SketchButton>
                     </Link>
+
+                    <div className="flex flex-wrap gap-4 justify-center items-center">
+                        <Link href="/encode">
+                            <SketchButton size="lg" variant="primary">Encode</SketchButton>
+                        </Link>
+                        <Link href="/text">
+                            <SketchButton size="lg" variant="primary">Text</SketchButton>
+                        </Link>
+                        <Link href="/ascii">
+                            <SketchButton size="lg" variant="primary">ASCII</SketchButton>
+                        </Link>
+                        <Link href="/devtools">
+                            <SketchButton size="lg" variant="primary">Dev Tools</SketchButton>
+                        </Link>
+                        <Link href="/generators">
+                            <SketchButton size="lg" variant="primary">Generators</SketchButton>
+                        </Link>
+                        <Link href="/secrets">
+                            <SketchButton size="lg" variant="secondary">Secrets</SketchButton>
+                        </Link>
+                    </div>
                 </motion.div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-24 text-left">
-                    <SketchCard decoration="tack" title="Encoders" rotate={-1}>
-                        <p className="font-body text-xl">Base64, URL, ROT13, Hex, Morse, and Binary conversion with auto-detection.</p>
-                    </SketchCard>
+                    <Link href="/encode">
+                        <SketchCard decoration="tack" title="Encoders" rotate={-1} className="h-full hover:scale-[1.02] transition-transform cursor-pointer">
+                            <p className="font-body text-xl">Base64, URL, ROT13, Hex, Morse, and Binary conversion with auto-detection.</p>
+                        </SketchCard>
+                    </Link>
 
-                    <SketchCard decoration="tape" title="Transformers" rotate={1}>
-                        <p className="font-body text-xl">Regex find/replace, case changes, line numbering, and whitespace cleanup.</p>
-                    </SketchCard>
+                    <Link href="/text">
+                        <SketchCard decoration="tape" title="Transformers" rotate={1} className="h-full hover:scale-[1.02] transition-transform cursor-pointer">
+                            <p className="font-body text-xl">Regex find/replace, case changes, line numbering, and whitespace cleanup.</p>
+                        </SketchCard>
+                    </Link>
 
-                    <SketchCard title="Generators" rotate={-0.5}>
-                        <p className="font-body text-xl">Strong passwords, UUIDs, roll numbers, and high-quality test data.</p>
-                    </SketchCard>
+                    <Link href="/generators">
+                        <SketchCard title="Generators" rotate={-0.5} className="h-full hover:scale-[1.02] transition-transform cursor-pointer">
+                            <p className="font-body text-xl">Strong passwords, UUIDs, roll numbers, and high-quality test data.</p>
+                        </SketchCard>
+                    </Link>
                 </div>
             </div>
 
