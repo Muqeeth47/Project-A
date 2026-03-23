@@ -19,6 +19,9 @@ import {
     Sparkles
 } from "lucide-react";
 
+import { useSearchParams } from "next/navigation";
+import { InstructionToast } from "@/components/InstructionToast";
+
 // Import logic
 import * as Encoders from "@/core/encoders";
 import * as Transformers from "@/core/transformers";
@@ -30,7 +33,60 @@ import { copyToClipboard, downloadFile, getTextStats } from "@/core/utils";
 type LabTab = "encode" | "text" | "ascii" | "dev" | "generators" | "easter eggs";
 
 export default function LabPage() {
-    const [activeTab, setActiveTab] = useState<LabTab>("encode");
+    const searchParams = useSearchParams();
+    const featureParam = (searchParams.get("feature") ?? searchParams.get("tab") ?? "").toLowerCase().trim();
+
+    const tabFromFeature = (feature: string): LabTab => {
+        switch (feature) {
+            case "encode":
+                return "encode";
+            case "text":
+                return "text";
+            case "ascii":
+                return "ascii";
+            case "devtools":
+            case "dev":
+                return "dev";
+            case "generators":
+                return "generators";
+            case "secrets":
+                return "easter eggs";
+            default:
+                return "encode";
+        }
+    };
+
+    const [activeTab, setActiveTab] = useState<LabTab>(() => tabFromFeature(featureParam));
+    useEffect(() => {
+        setActiveTab(tabFromFeature(featureParam));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [featureParam]);
+
+    const instruction = (() => {
+        switch (featureParam) {
+            case "encode":
+                return {
+                    title: "Encode / Decode",
+                    text: "Paste text in the Input box, then click an Encode/Decode button (Base64/URL/Binary/Hex/ROT13/Caesar/Auto Decode).",
+                };
+            case "text":
+                return {
+                    title: "Text Transformers",
+                    text: "Use the buttons to lowercase/UPPERCASE, sentence-case, random-case, reverse, shuffle, spread, number lines, or clean empty lines.",
+                };
+            case "ascii":
+                return { title: "ASCII Art", text: "Pick a font, then click “Generate ASCII Art”." };
+            case "devtools":
+            case "dev":
+                return { title: "Dev Tools", text: "Use JSON/HTML/CSV escape and unescape to safely format your text." };
+            case "generators":
+                return { title: "Generators", text: "Click generator buttons to create sample data like passwords, UUIDs, roll numbers, and more." };
+            case "secrets":
+                return { title: "Secrets", text: "Copy the commands below, then paste them into the Lab input (easter eggs use the Input text)." };
+            default:
+                return null;
+        }
+    })();
     const [input, setInput] = useState("");
     const [output, setOutput] = useState("");
     const [stats, setStats] = useState({ charCount: 0, wordCount: 0, lineCount: 0 });
@@ -227,6 +283,9 @@ export default function LabPage() {
     if (activeTab === "easter eggs") {
         return (
             <div className="min-h-screen p-4 md:p-8 flex flex-col gap-8 max-w-7xl mx-auto">
+                {instruction && (
+                    <InstructionToast title={instruction.title} text={instruction.text} />
+                )}
                 {/* Infinite Void overlay (same as main lab) */}
                 <AnimatePresence>
                     {showInfiniteVoidOverlay && (
@@ -359,7 +418,7 @@ export default function LabPage() {
                                 </button>
                             ))}
                         </div>
-                    </nav>
+                        </nav>
                 </header>
 
                 <main className="flex flex-col items-center justify-center p-2 md:p-12 overflow-hidden bg-[#fdfbf7]">
@@ -463,7 +522,12 @@ export default function LabPage() {
                         </div>
 
                         <div className="pt-8">
-                            <SketchButton onClick={() => setActiveTab("encode")} variant="accent" size="lg" className="w-full md:w-auto">
+                            <SketchButton
+                                onClick={() => setActiveTab("encode")}
+                                variant="accent"
+                                size="lg"
+                                className="w-full md:w-auto"
+                            >
                                 <ChevronRight className="rotate-180 inline mr-2" /> Back to Encode
                             </SketchButton>
                         </div>
@@ -475,6 +539,9 @@ export default function LabPage() {
 
     return (
         <div className="min-h-screen p-4 md:p-8 flex flex-col gap-6 md:gap-8 max-w-7xl mx-auto">
+            {instruction && (
+                <InstructionToast title={instruction.title} text={instruction.text} />
+            )}
             {/* Infinite Void — full-page video overlay */}
             <AnimatePresence>
                 {showInfiniteVoidOverlay && (
@@ -629,7 +696,7 @@ export default function LabPage() {
                             </button>
                         ))}
                     </div>
-                </nav>
+                    </nav>
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 flex-grow">
