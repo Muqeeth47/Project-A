@@ -388,13 +388,8 @@ export default function LabPage() {
                 {/* Header to maintain context */}
                 <header className="flex flex-col md:flex-row justify-between items-center gap-6 relative">
                     <div className="flex flex-col items-center md:items-start text-center md:text-left">
-                    <Link href="/" className="hover:opacity-80 transition-opacity">
                         <h1
-                            onClick={(e) => {
-                                // Prevent link navigation if it's a madness mode click (well, actually we can just let it navigate if they want)
-                                // But handleLogoClick is for easter eggs
-                                handleLogoClick();
-                            }}
+                            onClick={handleLogoClick}
                             className={`font-heading text-3xl md:text-4xl underline decoration-marker-red decoration-4 cursor-pointer select-none transition-all ${madnessMode ? "shake-crazy text-xs font-mono no-underline whitespace-pre" : ""}`}
                         >
                             {madnessMode ? `
@@ -407,15 +402,15 @@ export default function LabPage() {
 
 ` : "pRojEctCaSE Lab"}
                         </h1>
-                    </Link>
                     {madnessMode && <span className="stop-poking-msg text-sm mt-2">STOP POKING ME 😭</span>}
                 </div>
 
-                    <nav className="w-full md:w-auto px-2">
+                    <nav className="w-full md:w-auto px-2" aria-label="Lab sections">
                         {/* Mobile Dropdown */}
                         <div className="md:hidden w-full">
                             <div className="relative">
                                 <select
+                                    aria-label="Select lab section"
                                     className="w-full bg-white border-[3px] border-pencil p-4 pr-10 font-heading text-xl appearance-none rounded-2xl shadow-hard-sm focus:outline-none focus:border-marker-blue transition-all active:scale-[0.98]"
                                     value={activeTab}
                                     onChange={(e) => handleTabChange(e.target.value as LabTab)}
@@ -423,16 +418,18 @@ export default function LabPage() {
                                 >
                                     {tabs.map(tab => <option key={tab.id} value={tab.id}>{tab.label}</option>)}
                                 </select>
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-marker-red animate-pulse">
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-marker-red animate-pulse" aria-hidden="true">
                                     <ChevronRight className="rotate-90" size={24} />
                                 </div>
                             </div>
                         </div>
                         {/* Desktop Tabs */}
-                        <div className="hidden md:flex flex-wrap gap-2">
+                        <div className="hidden md:flex flex-wrap gap-2" role="tablist" aria-label="Lab sections">
                             {tabs.map((tab) => (
                                 <button
                                     key={tab.id}
+                                    role="tab"
+                                    aria-selected={activeTab === tab.id}
                                     onClick={() => handleTabChange(tab.id as LabTab)}
                                     className={`
                         flex items-center gap-2 px-4 py-2 font-body text-lg border-2 border-pencil transition-all
@@ -440,14 +437,14 @@ export default function LabPage() {
                     `}
                                     style={{ borderRadius: "10px 10px 10px 10px / 50px 10px 50px 10px" }}
                                 >
-                                    {tab.icon} {tab.label}
+                                    <span aria-hidden="true">{tab.icon}</span> {tab.label}
                                 </button>
                             ))}
                         </div>
-                        </nav>
+                    </nav>
                 </header>
 
-                <main className="flex flex-col items-center justify-center p-2 md:p-12 overflow-hidden bg-[#fdfbf7]">
+                <main className="flex flex-col items-center justify-center p-2 md:p-12 overflow-hidden bg-paper-light">
                     <div className="max-w-3xl w-full flex flex-col gap-8 text-center">
                         <motion.div
                             initial={{ y: -20, opacity: 0 }}
@@ -676,12 +673,12 @@ export default function LabPage() {
             {/* Header */}
             <header className="flex flex-col md:flex-row justify-between items-center gap-6 relative">
                 <div className="flex flex-col items-center md:items-start text-center md:text-left">
-                    <Link href="/" className="hover:opacity-80 transition-opacity">
-                        <h1
-                            onClick={handleLogoClick}
-                            className={`font-heading text-4xl underline decoration-marker-red decoration-4 cursor-pointer select-none transition-all ${madnessMode ? "shake-crazy text-xs font-mono no-underline whitespace-pre" : ""}`}
-                        >
-                            {madnessMode ? `
+                    <h1
+                        onClick={handleLogoClick}
+                        aria-label="pRojEctCaSE Lab — click 3 times for a surprise"
+                        className={`font-heading text-4xl underline decoration-marker-red decoration-4 cursor-pointer select-none transition-all ${madnessMode ? "shake-crazy text-xs font-mono no-underline whitespace-pre" : ""}`}
+                    >
+                        {madnessMode ? `
 ███████╗████████╗ ██████╗ ██████╗   ██╗
 ██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗  ██║
 ███████╗   ██║   ██║   ██║██████╔╝  ██║
@@ -690,16 +687,16 @@ export default function LabPage() {
 ╚══════╝   ╚═╝    ╚═════╝ ╚═╝       ╚═╝
 
 ` : "pRojEctCaSE Lab"}
-                        </h1>
-                    </Link>
-                    {madnessMode && <span className="stop-poking-msg text-sm mt-2">STOP POKING ME 😭</span>}
+                    </h1>
+                    {madnessMode && <span className="stop-poking-msg text-sm mt-2" aria-live="assertive">STOP POKING ME 😭</span>}
                 </div>
 
-                <nav className="w-full md:w-auto">
+                <nav className="w-full md:w-auto" aria-label="Lab sections">
                     {/* Mobile Dropdown */}
                     <div className="md:hidden w-full px-2">
                         <div className="relative group">
                             <select
+                                aria-label="Select lab section"
                                 className="w-full bg-white border-[3px] border-pencil p-4 pr-10 font-heading text-xl appearance-none rounded-2xl shadow-hard-sm focus:outline-none focus:border-marker-blue transition-all active:scale-[0.98]"
                                 value={activeTab}
                                 onChange={(e) => handleTabChange(e.target.value as LabTab)}
@@ -707,16 +704,18 @@ export default function LabPage() {
                             >
                                 {tabs.map(tab => <option key={tab.id} value={tab.id}>{tab.label}</option>)}
                             </select>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-marker-red animate-pulse">
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-marker-red animate-pulse" aria-hidden="true">
                                 <ChevronRight className="rotate-90" size={24} />
                             </div>
                         </div>
                     </div>
                     {/* Desktop Tabs */}
-                    <div className="hidden md:flex flex-wrap gap-2">
+                    <div className="hidden md:flex flex-wrap gap-2" role="tablist" aria-label="Lab sections">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
+                                role="tab"
+                                aria-selected={activeTab === tab.id}
                                 onClick={() => handleTabChange(tab.id as LabTab)}
                                 className={`
                     flex items-center gap-2 px-4 py-2 font-body text-lg border-2 border-pencil transition-all
@@ -724,55 +723,75 @@ export default function LabPage() {
                   `}
                                 style={{ borderRadius: "10px 10px 10px 10px / 50px 10px 50px 10px" }}
                             >
-                                {tab.icon} {tab.label}
+                                <span aria-hidden="true">{tab.icon}</span> {tab.label}
                             </button>
                         ))}
                     </div>
-                    </nav>
+                </nav>
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 flex-grow">
                 {/* Input Section */}
-                <section className="flex flex-col gap-3 md:gap-4">
+                <section className="flex flex-col gap-3 md:gap-4" aria-label="Input area">
                     <div className="flex justify-between items-end px-1">
-                        <h2 className="font-heading text-xl md:text-2xl">Input</h2>
+                        <h2 className="font-heading text-xl md:text-2xl" id="input-label">Input</h2>
                         <div className="flex gap-2">
-                            <SketchButton variant="ghost" size="sm" onClick={clear} className="text-marker-red h-[44px] w-[44px] flex items-center justify-center">
-                                <Trash2 size={24} />
+                            <SketchButton
+                                variant="ghost"
+                                size="sm"
+                                onClick={clear}
+                                aria-label="Clear input"
+                                className="text-marker-red h-[44px] w-[44px] flex items-center justify-center"
+                            >
+                                <Trash2 size={24} aria-hidden="true" />
                             </SketchButton>
                         </div>
                     </div>
                     <SketchTextarea
+                        aria-labelledby="input-label"
                         placeholder="Type or paste something here..."
                         className="flex-grow min-h-[180px] md:min-h-[300px] w-full text-lg"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                     />
-                    <div className="flex flex-wrap gap-4 font-mono text-xs opacity-50 px-2 group">
-                        {/* Stats hidden on very small screens unless focused/tapped, simpler display */}
-                        <div className="flex gap-4">
+                    <div className="flex flex-wrap gap-4 font-mono text-xs opacity-50 px-2" aria-label={`${stats.charCount} characters, ${stats.wordCount} words, ${stats.lineCount} lines`}>
+                        <div className="flex gap-4" aria-hidden="true">
                             <span>CHARS: {stats.charCount}</span>
                             <span>WORDS: {stats.wordCount}</span>
                         </div>
-                        <span>LINES: {stats.lineCount}</span>
+                        <span aria-hidden="true">LINES: {stats.lineCount}</span>
                     </div>
                 </section>
 
                 {/* Output Section */}
-                <section className="flex flex-col gap-3 md:gap-4">
+                <section className="flex flex-col gap-3 md:gap-4" aria-label="Output area" aria-live="polite" aria-atomic="false">
                     <div className="flex justify-between items-end px-1">
-                        <h2 className="font-heading text-xl md:text-2xl text-marker-blue">Output</h2>
+                        <h2 className="font-heading text-xl md:text-2xl text-marker-blue" id="output-label">Output</h2>
                         <div className="flex gap-2">
-                            <SketchButton variant="secondary" size="sm" onClick={handleDownload} className="h-[44px] w-[44px] flex items-center justify-center">
-                                <Download size={24} />
+                            <SketchButton
+                                variant="secondary"
+                                size="sm"
+                                onClick={handleDownload}
+                                aria-label="Download output as text file"
+                                className="h-[44px] w-[44px] flex items-center justify-center"
+                            >
+                                <Download size={24} aria-hidden="true" />
                             </SketchButton>
-                            <SketchButton variant="primary" size="sm" onClick={handleCopy} className="h-[44px] min-w-[44px] flex items-center justify-center">
-                                {copied ? "Copied!" : <Copy size={24} />}
+                            <SketchButton
+                                variant="primary"
+                                size="sm"
+                                onClick={handleCopy}
+                                aria-label={copied ? "Copied to clipboard" : "Copy output to clipboard"}
+                                className="h-[44px] min-w-[44px] flex items-center justify-center"
+                            >
+                                {copied ? "Copied!" : <Copy size={24} aria-hidden="true" />}
                             </SketchButton>
                         </div>
                     </div>
                     <SketchTextarea
                         readOnly
+                        aria-labelledby="output-label"
+                        aria-readonly="true"
                         className="flex-grow min-h-[180px] md:min-h-[300px] bg-paper-muted/30 w-full text-lg"
                         value={output}
                         placeholder="Output will appear here..."
@@ -810,16 +829,16 @@ export default function LabPage() {
 
                         {activeTab === "text" && (
                             <>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.toLowerCase)}>lowercase</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.toUpperCase)}>UPPERCASE</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.toSentenceCase)}>Sentence case</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.toRandomCase)}>RaNdOm cAsE</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.reverseText)}>Reverse</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.shuffleText)}>Shuffle</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.spreadText)}>S p r e a d</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.numberLines)}>Number Lines</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Transformers.removeEmptyLines)}>Rm Empty Lines</SketchButton>
-                                <div className="col-span-1 sm:col-span-2 flex flex-col sm:flex-row gap-2">
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => runEncoder(Transformers.toLowerCase)}>lowercase</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => runEncoder(Transformers.toUpperCase)}>UPPERCASE</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => runEncoder(Transformers.toSentenceCase)}>Sentence case</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => runEncoder(Transformers.toRandomCase)}>RaNdOm cAsE</SketchButton>
+                                <SketchButton className="flex-1 min-w-[120px] justify-center" onClick={() => runEncoder(Transformers.reverseText)}>Reverse</SketchButton>
+                                <SketchButton className="flex-1 min-w-[120px] justify-center" onClick={() => runEncoder(Transformers.shuffleText)}>Shuffle</SketchButton>
+                                <SketchButton className="flex-1 min-w-[120px] justify-center" onClick={() => runEncoder(Transformers.spreadText)}>S p r e a d</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => runEncoder(Transformers.numberLines)}>Number Lines</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => runEncoder(Transformers.removeEmptyLines)}>Rm Empty Lines</SketchButton>
+                                <div className="w-full flex flex-col sm:flex-row gap-2">
                                     <SketchInput placeholder="Find" value={findText} onChange={(e) => setFindText(e.target.value)} />
                                     <SketchInput placeholder="Replace" value={replaceText} onChange={(e) => setReplaceText(e.target.value)} />
                                     <SketchButton className="w-full sm:w-auto" onClick={() => setOutput(Transformers.findReplace(input, findText, replaceText))}>Go</SketchButton>
@@ -848,23 +867,23 @@ export default function LabPage() {
 
                         {activeTab === "dev" && (
                             <>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Escapes.escapeJSON)}>JSON Escape</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Escapes.unescapeJSON)}>JSON Unescape</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Escapes.escapeHTML)}>HTML Escape</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Escapes.unescapeHTML)}>HTML Unescape</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => runEncoder(Escapes.escapeCSV)}>CSV Escape</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => runEncoder(Escapes.escapeJSON)}>JSON Escape</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => runEncoder(Escapes.unescapeJSON)}>JSON Unescape</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => runEncoder(Escapes.escapeHTML)}>HTML Escape</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => runEncoder(Escapes.unescapeHTML)}>HTML Unescape</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => runEncoder(Escapes.escapeCSV)}>CSV Escape</SketchButton>
                             </>
                         )}
 
                         {activeTab === "generators" && (
                             <>
-                                <SketchButton className="w-full justify-center" onClick={() => setOutput(Generators.generatePassword())}>Password</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => setOutput(Generators.generateUUID())}>UUID v4</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => setOutput(Generators.generateShortId())}>Short ID</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => setOutput(Generators.generateRollNumber())}>Roll Number</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => setOutput(Generators.generateUsername())}>Username</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => setOutput(Generators.generateLoremIpsum(3))}>Lorem Ipsum</SketchButton>
-                                <SketchButton className="w-full justify-center" onClick={() => setOutput(Generators.generateTestData("email"))}>Test Email</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => setOutput(Generators.generatePassword())}>Password</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => setOutput(Generators.generateUUID())}>UUID v4</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => setOutput(Generators.generateShortId())}>Short ID</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => setOutput(Generators.generateRollNumber())}>Roll Number</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => setOutput(Generators.generateUsername())}>Username</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => setOutput(Generators.generateLoremIpsum(3))}>Lorem Ipsum</SketchButton>
+                                <SketchButton className="flex-1 min-w-[140px] justify-center" onClick={() => setOutput(Generators.generateTestData("email"))}>Test Email</SketchButton>
                             </>
                         )}
                     </motion.div>
