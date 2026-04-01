@@ -43,6 +43,7 @@ export const SketchButton = ({
             className={cn(
                 "relative font-body border-[3px] transition-all duration-100",
                 "shadow-hard active:shadow-none",
+                "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-marker-blue/40 focus-visible:ring-offset-2",
                 variants[variant],
                 sizes[size],
                 className
