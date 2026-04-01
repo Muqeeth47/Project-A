@@ -45,6 +45,9 @@ export function InstructionToast({
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.2 }}
                     className="fixed top-4 left-1/2 -translate-x-1/2 z-[99999] w-[min(92vw,680px)]"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true"
                 >
                     <div className="bg-white/95 backdrop-blur-sm border-[3px] border-pencil shadow-hard-sm rounded-2xl px-4 py-3 flex items-start justify-between gap-3">
                         <div className="min-w-0">

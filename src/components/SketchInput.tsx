@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useId } from "react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -12,13 +12,22 @@ interface SketchInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     label?: string;
 }
 
-export const SketchInput = ({ label, className, ...props }: SketchInputProps) => {
+export const SketchInput = ({ label, className, id: idProp, ...props }: SketchInputProps) => {
+    const autoId = useId();
+    const id = idProp ?? (label ? `sketch-input-${autoId}` : undefined);
+
     return (
         <div className="flex flex-col gap-2 w-full">
-            {label && <label className="font-heading text-lg md:text-xl">{label}</label>}
+            {label && (
+                <label htmlFor={id} className="font-heading text-lg md:text-xl">
+                    {label}
+                </label>
+            )}
             <input
+                id={id}
                 className={cn(
-                    "bg-white border-[3px] border-pencil p-2 md:p-3 font-body text-base md:text-lg focus:outline-none focus:border-marker-blue focus:ring-4 focus:ring-marker-blue/10 transition-all",
+                    "bg-white border-[3px] border-pencil p-2 md:p-3 font-body text-base md:text-lg",
+                    "focus:outline-none focus:border-marker-blue focus:ring-4 focus:ring-marker-blue/10 transition-all",
                     className
                 )}
                 style={{ borderRadius: "15px 15px 15px 15px / 125px 15px 125px 15px" }}
@@ -32,13 +41,22 @@ interface SketchTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaE
     label?: string;
 }
 
-export const SketchTextarea = ({ label, className, ...props }: SketchTextareaProps) => {
+export const SketchTextarea = ({ label, className, id: idProp, ...props }: SketchTextareaProps) => {
+    const autoId = useId();
+    const id = idProp ?? (label ? `sketch-textarea-${autoId}` : undefined);
+
     return (
         <div className="flex flex-col gap-2 w-full">
-            {label && <label className="font-heading text-lg md:text-xl">{label}</label>}
+            {label && (
+                <label htmlFor={id} className="font-heading text-lg md:text-xl">
+                    {label}
+                </label>
+            )}
             <textarea
+                id={id}
                 className={cn(
-                    "bg-white border-[3px] border-pencil p-3 md:p-4 font-mono text-sm md:text-base focus:outline-none focus:border-marker-blue focus:ring-4 focus:ring-marker-blue/10 transition-all resize-none",
+                    "bg-white border-[3px] border-pencil p-3 md:p-4 font-mono text-sm md:text-base",
+                    "focus:outline-none focus:border-marker-blue focus:ring-4 focus:ring-marker-blue/10 transition-all resize-none",
                     className
                 )}
                 style={{ borderRadius: "15px 15px 15px 15px / 15px 125px 15px 125px" }}
