@@ -225,6 +225,18 @@ export default function LabPage() {
     const [activeTheme, setActiveTheme] = useState<"batman" | "cat" | null>(null);
     const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
 
+    // Custom mobile tab dropdown
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const mobileMenuRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!mobileMenuOpen) return;
+        const onClick = (e: MouseEvent) => {
+            if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) setMobileMenuOpen(false);
+        };
+        document.addEventListener("mousedown", onClick);
+        return () => document.removeEventListener("mousedown", onClick);
+    }, [mobileMenuOpen]);
+
     const handleCopyCommand = async (command: string) => {
         const ok = await copyToClipboard(command);
         if (ok) {
@@ -495,21 +507,47 @@ export default function LabPage() {
                 </div>
 
                     <nav className="w-full md:w-auto px-2" aria-label="Lab sections">
-                        {/* Mobile Dropdown */}
-                        <div className="md:hidden w-full">
+                        {/* Mobile Custom Dropdown */}
+                        <div className="md:hidden w-full" ref={mobileMenuRef}>
                             <div className="relative">
-                                <select
+                                <button
+                                    type="button"
+                                    onClick={() => setMobileMenuOpen(o => !o)}
                                     aria-label="Select lab section"
-                                    className="w-full bg-white border-[3px] border-pencil p-4 pr-10 font-heading text-xl appearance-none rounded-2xl shadow-hard-sm focus:outline-none focus:border-marker-blue transition-all active:scale-[0.98]"
-                                    value={activeTab}
-                                    onChange={(e) => handleTabChange(e.target.value as LabTab)}
+                                    aria-expanded={mobileMenuOpen}
+                                    className="w-full bg-white border-[3px] border-pencil p-4 pr-12 font-heading text-xl shadow-hard-sm focus:outline-none focus:border-marker-blue transition-all active:scale-[0.98] text-left flex items-center gap-2"
                                     style={{ borderRadius: "125px 12px 105px 12px / 12px 125px 12px 105px" }}
                                 >
-                                    {tabs.map(tab => <option key={tab.id} value={tab.id}>{tab.label}</option>)}
-                                </select>
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-marker-red animate-pulse" aria-hidden="true">
-                                    <ChevronRight className="rotate-90" size={24} />
+                                    {tabs.find(t => t.id === activeTab)?.icon}
+                                    {tabs.find(t => t.id === activeTab)?.label}
+                                </button>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-marker-red" aria-hidden="true">
+                                    <ChevronRight className={`transition-transform duration-200 ${mobileMenuOpen ? "rotate-[270deg]" : "rotate-90"}`} size={24} />
                                 </div>
+                                <AnimatePresence>
+                                    {mobileMenuOpen && (
+                                        <motion.ul
+                                            initial={{ opacity: 0, y: -8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -8 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="absolute left-0 right-0 top-full mt-2 z-50 bg-white border-[3px] border-pencil shadow-hard overflow-hidden"
+                                            style={{ borderRadius: "15px 15px 15px 15px / 50px 15px 50px 15px" }}
+                                        >
+                                            {tabs.map(tab => (
+                                                <li key={tab.id}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { handleTabChange(tab.id); setMobileMenuOpen(false); }}
+                                                        className={`w-full text-left px-5 py-3 font-heading text-lg flex items-center gap-3 transition-colors ${activeTab === tab.id ? "bg-pencil text-white" : "hover:bg-paper-muted"}`}
+                                                    >
+                                                        {tab.icon} {tab.label}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </motion.ul>
+                                    )}
+                                </AnimatePresence>
                             </div>
                         </div>
                         {/* Desktop Tabs */}
@@ -551,44 +589,44 @@ export default function LabPage() {
                         <SketchCard decoration="tape" className="bg-[#fff9c4]/30 text-left p-4 md:p-6">
                             <p className="font-heading text-base md:text-xl text-pencil mb-3 md:mb-4">Type these in the Lab input</p>
                             <ul className="space-y-4 md:space-y-6 font-body text-base md:text-xl list-none">
-                                <motion.li whileHover={{ x: 5 }} className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 group">
+                                <motion.li whileHover={{ x: 5 }} className="flex items-center justify-between gap-2 group">
                                     <span className="flex gap-2 md:gap-3 items-start flex-1 min-w-0">
                                         <span className="text-xl md:text-2xl mt-0.5 shrink-0">🦇</span>
-                                        <span className="min-w-0">Type: <strong className="font-heading text-marker-blue">i am batman</strong> → Dark Gotham mode</span>
+                                        <span className="min-w-0">Type: <strong className="font-heading text-marker-blue">i am batman</strong> <span className="hidden sm:inline">→ Dark Gotham mode</span></span>
                                     </span>
-                                    <button type="button" onClick={() => handleCopyCommand("i am batman")} className="self-start sm:self-center flex items-center gap-1 min-h-[44px] min-w-[44px] px-3 py-2 rounded border-2 border-pencil/30 hover:border-pencil hover:bg-paper-muted transition-colors opacity-90 sm:opacity-70 sm:group-hover:opacity-100 touch-manipulation" title="Copy command"><Copy size={20} />{copiedCommand === "i am batman" && <span className="text-xs sm:text-sm whitespace-nowrap">Copied!</span>}</button>
+                                    <button type="button" onClick={() => handleCopyCommand("i am batman")} className="shrink-0 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-pencil/20 hover:border-pencil hover:bg-paper-muted transition-colors touch-manipulation" title="Copy command">{copiedCommand === "i am batman" ? <span className="text-xs">✓</span> : <Copy size={16} />}</button>
                                 </motion.li>
-                                <motion.li whileHover={{ x: 5 }} className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 group">
+                                <motion.li whileHover={{ x: 5 }} className="flex items-center justify-between gap-2 group">
                                     <span className="flex gap-2 md:gap-3 items-start flex-1 min-w-0">
                                         <span className="text-xl md:text-2xl mt-0.5 shrink-0">🐱</span>
-                                        <span className="min-w-0">Type: <strong className="font-heading text-orange-600">meow</strong> → Orange cat mode</span>
+                                        <span className="min-w-0">Type: <strong className="font-heading text-orange-600">meow</strong> <span className="hidden sm:inline">→ Orange cat mode</span></span>
                                     </span>
-                                    <button type="button" onClick={() => handleCopyCommand("meow")} className="self-start sm:self-center flex items-center gap-1 min-h-[44px] min-w-[44px] px-3 py-2 rounded border-2 border-pencil/30 hover:border-pencil hover:bg-paper-muted transition-colors opacity-90 sm:opacity-70 sm:group-hover:opacity-100 touch-manipulation" title="Copy command"><Copy size={20} />{copiedCommand === "meow" && <span className="text-xs sm:text-sm whitespace-nowrap">Copied!</span>}</button>
+                                    <button type="button" onClick={() => handleCopyCommand("meow")} className="shrink-0 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-pencil/20 hover:border-pencil hover:bg-paper-muted transition-colors touch-manipulation" title="Copy command">{copiedCommand === "meow" ? <span className="text-xs">✓</span> : <Copy size={16} />}</button>
                                 </motion.li>
-                                <motion.li whileHover={{ x: 5 }} className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 group">
+                                <motion.li whileHover={{ x: 5 }} className="flex items-center justify-between gap-2 group">
                                     <span className="flex gap-2 md:gap-3 items-start flex-1 min-w-0">
                                         <span className="text-xl md:text-2xl mt-0.5 shrink-0">🧠</span>
                                         <span className="min-w-0">Type: <strong className="font-heading text-green-600">sudo make me cool</strong></span>
                                     </span>
-                                    <button type="button" onClick={() => handleCopyCommand("sudo make me cool")} className="self-start sm:self-center flex items-center gap-1 min-h-[44px] min-w-[44px] px-3 py-2 rounded border-2 border-pencil/30 hover:border-pencil hover:bg-paper-muted transition-colors opacity-90 sm:opacity-70 sm:group-hover:opacity-100 touch-manipulation" title="Copy command"><Copy size={20} />{copiedCommand === "sudo make me cool" && <span className="text-xs sm:text-sm whitespace-nowrap">Copied!</span>}</button>
+                                    <button type="button" onClick={() => handleCopyCommand("sudo make me cool")} className="shrink-0 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-pencil/20 hover:border-pencil hover:bg-paper-muted transition-colors touch-manipulation" title="Copy command">{copiedCommand === "sudo make me cool" ? <span className="text-xs">✓</span> : <Copy size={16} />}</button>
                                 </motion.li>
                                 <motion.li whileHover={{ x: 5 }} className="flex gap-2 md:gap-3 items-start">
                                     <span className="text-xl md:text-2xl mt-0.5 shrink-0">🎯</span>
                                     <span className="min-w-0">Click the pRojEctCaSE logo <strong className="font-heading text-marker-red">3 times</strong></span>
                                 </motion.li>
-                                <motion.li whileHover={{ x: 5 }} className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 group">
+                                <motion.li whileHover={{ x: 5 }} className="flex items-center justify-between gap-2 group">
                                     <span className="flex gap-2 md:gap-3 items-start flex-1 min-w-0">
                                         <span className="text-xl md:text-2xl mt-0.5 shrink-0">🌀</span>
-                                        <span className="min-w-0">Type: <strong className="font-heading text-purple-600">infinite void</strong> → Full-page video overlay</span>
+                                        <span className="min-w-0">Type: <strong className="font-heading text-purple-600">infinite void</strong> <span className="hidden sm:inline">→ Full-page video overlay</span></span>
                                     </span>
-                                    <button type="button" onClick={() => handleCopyCommand("infinite void")} className="self-start sm:self-center flex items-center gap-1 min-h-[44px] min-w-[44px] px-3 py-2 rounded border-2 border-pencil/30 hover:border-pencil hover:bg-paper-muted transition-colors opacity-90 sm:opacity-70 sm:group-hover:opacity-100 touch-manipulation" title="Copy command"><Copy size={20} />{copiedCommand === "infinite void" && <span className="text-xs sm:text-sm whitespace-nowrap">Copied!</span>}</button>
+                                    <button type="button" onClick={() => handleCopyCommand("infinite void")} className="shrink-0 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-pencil/20 hover:border-pencil hover:bg-paper-muted transition-colors touch-manipulation" title="Copy command">{copiedCommand === "infinite void" ? <span className="text-xs">✓</span> : <Copy size={16} />}</button>
                                 </motion.li>
-                                <motion.li whileHover={{ x: 5 }} className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 group">
+                                <motion.li whileHover={{ x: 5 }} className="flex items-center justify-between gap-2 group">
                                     <span className="flex gap-2 md:gap-3 items-start flex-1 min-w-0">
                                         <span className="text-xl md:text-2xl mt-0.5 shrink-0">🔴</span>
-                                        <span className="min-w-0">Type: <strong className="font-heading text-red-700">Fukuma Mizushi</strong> → Sukuna video overlay</span>
+                                        <span className="min-w-0">Type: <strong className="font-heading text-red-700">Fukuma Mizushi</strong> <span className="hidden sm:inline">→ Sukuna video overlay</span></span>
                                     </span>
-                                    <button type="button" onClick={() => handleCopyCommand("Fukuma Mizushi")} className="self-start sm:self-center flex items-center gap-1 min-h-[44px] min-w-[44px] px-3 py-2 rounded border-2 border-pencil/30 hover:border-pencil hover:bg-paper-muted transition-colors opacity-90 sm:opacity-70 sm:group-hover:opacity-100 touch-manipulation" title="Copy command"><Copy size={20} />{copiedCommand === "Fukuma Mizushi" && <span className="text-xs sm:text-sm whitespace-nowrap">Copied!</span>}</button>
+                                    <button type="button" onClick={() => handleCopyCommand("Fukuma Mizushi")} className="shrink-0 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-pencil/20 hover:border-pencil hover:bg-paper-muted transition-colors touch-manipulation" title="Copy command">{copiedCommand === "Fukuma Mizushi" ? <span className="text-xs">✓</span> : <Copy size={16} />}</button>
                                 </motion.li>
                             </ul>
                         </SketchCard>
@@ -781,21 +819,47 @@ export default function LabPage() {
                 </div>
 
                 <nav className="w-full md:w-auto" aria-label="Lab sections">
-                    {/* Mobile Dropdown */}
-                    <div className="md:hidden w-full px-2">
-                        <div className="relative group">
-                            <select
+                    {/* Mobile Custom Dropdown */}
+                    <div className="md:hidden w-full px-2" ref={mobileMenuRef}>
+                        <div className="relative">
+                            <button
+                                type="button"
+                                onClick={() => setMobileMenuOpen(o => !o)}
                                 aria-label="Select lab section"
-                                className="w-full bg-white border-[3px] border-pencil p-4 pr-10 font-heading text-xl appearance-none rounded-2xl shadow-hard-sm focus:outline-none focus:border-marker-blue transition-all active:scale-[0.98]"
-                                value={activeTab}
-                                onChange={(e) => handleTabChange(e.target.value as LabTab)}
+                                aria-expanded={mobileMenuOpen}
+                                className="w-full bg-white border-[3px] border-pencil p-4 pr-12 font-heading text-xl shadow-hard-sm focus:outline-none focus:border-marker-blue transition-all active:scale-[0.98] text-left flex items-center gap-2"
                                 style={{ borderRadius: "12px 125px 12px 105px / 12px 12px 125px 105px" }}
                             >
-                                {tabs.map(tab => <option key={tab.id} value={tab.id}>{tab.label}</option>)}
-                            </select>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-marker-red animate-pulse" aria-hidden="true">
-                                <ChevronRight className="rotate-90" size={24} />
+                                {tabs.find(t => t.id === activeTab)?.icon}
+                                {tabs.find(t => t.id === activeTab)?.label}
+                            </button>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-marker-red" aria-hidden="true">
+                                <ChevronRight className={`transition-transform duration-200 ${mobileMenuOpen ? "rotate-[270deg]" : "rotate-90"}`} size={24} />
                             </div>
+                            <AnimatePresence>
+                                {mobileMenuOpen && (
+                                    <motion.ul
+                                        initial={{ opacity: 0, y: -8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -8 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="absolute left-0 right-0 top-full mt-2 z-50 bg-white border-[3px] border-pencil shadow-hard overflow-hidden"
+                                        style={{ borderRadius: "15px 15px 15px 15px / 50px 15px 50px 15px" }}
+                                    >
+                                        {tabs.map(tab => (
+                                            <li key={tab.id}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { handleTabChange(tab.id); setMobileMenuOpen(false); }}
+                                                    className={`w-full text-left px-5 py-3 font-heading text-lg flex items-center gap-3 transition-colors ${activeTab === tab.id ? "bg-pencil text-white" : "hover:bg-paper-muted"}`}
+                                                >
+                                                    {tab.icon} {tab.label}
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </motion.ul>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </div>
                     {/* Desktop Tabs */}
