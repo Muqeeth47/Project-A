@@ -16,7 +16,9 @@ import {
     Type,
     Key,
     Code as CodeIcon,
-    Sparkles
+    Sparkles,
+    ArrowLeftRight,
+    History,
 } from "lucide-react";
 
 import { useSearchParams, useParams, useRouter } from "next/navigation";
@@ -112,6 +114,81 @@ export default function LabPage() {
     const [findText, setFindText] = useState("");
     const [replaceText, setReplaceText] = useState("");
     const [asciiFont, setAsciiFont] = useState("Standard");
+
+    // — Keyboard shortcut refs —
+    const inputRef = useRef(input);
+    const outputRef = useRef(output);
+    const lastActionRef = useRef<(() => void) | null>(null);
+    const asciiFontRef = useRef(asciiFont);
+    useEffect(() => { inputRef.current = input; }, [input]);
+    useEffect(() => { outputRef.current = output; }, [output]);
+    useEffect(() => { asciiFontRef.current = asciiFont; }, [asciiFont]);
+
+    // — Output history (last 10) —
+    const [history, setHistory] = useState<string[]>(() => {
+        if (typeof window === "undefined") return [];
+        try { return JSON.parse(localStorage.getItem("projectcase_history") || "[]"); }
+        catch { return []; }
+    });
+    const [showHistory, setShowHistory] = useState(false);
+    const historyRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!output.trim()) return;
+        setHistory(prev => {
+            const next = [output, ...prev.filter(h => h !== output)].slice(0, 10);
+            try { localStorage.setItem("projectcase_history", JSON.stringify(next)); } catch {}
+            return next;
+        });
+    }, [output]);
+
+    useEffect(() => {
+        if (!showHistory) return;
+        const onClick = (e: MouseEvent) => {
+            if (historyRef.current && !historyRef.current.contains(e.target as Node)) setShowHistory(false);
+        };
+        document.addEventListener("mousedown", onClick);
+        return () => document.removeEventListener("mousedown", onClick);
+    }, [showHistory]);
+
+    // — Drag & drop —
+    const [isDragging, setIsDragging] = useState(false);
+    const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
+    const handleDragLeave = (e: React.DragEvent) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragging(false);
+    };
+    const handleFileDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => setInput((ev.target?.result as string) || "");
+        reader.readAsText(file);
+    };
+
+    // — Font size —
+    const [fontSize, setFontSize] = useState(14);
+
+    // — Keyboard shortcuts —
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            // Ctrl+Shift+C → copy output
+            if (e.ctrlKey && e.shiftKey && (e.key === "C" || e.key === "c")) {
+                e.preventDefault();
+                copyToClipboard(outputRef.current).then(ok => {
+                    if (ok) { setCopied(true); setTimeout(() => setCopied(false), 2000); }
+                });
+            }
+            // Ctrl+Enter → re-run last action
+            if (e.ctrlKey && !e.shiftKey && e.key === "Enter") {
+                e.preventDefault();
+                lastActionRef.current?.();
+            }
+        };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, []);
 
     // Update stats whenever input changes
     useEffect(() => {
@@ -263,28 +340,40 @@ export default function LabPage() {
         return false;
     };
 
-    // Transformation handlers
+    // Transformation handlers — each stores itself as lastAction for Ctrl+Enter replay
     const runEncoder = (fn: (s: string) => string) => {
         if (isCoolBypass()) return;
+        lastActionRef.current = () => {
+            if (inputRef.current.toLowerCase().trim() === "sudo make me cool") { setOutput("You were already cool 😎"); return; }
+            setOutput(fn(inputRef.current));
+        };
         setOutput(fn(input));
     };
     const runTransformer = (fn: (s: string, ...args: any[]) => string, ...args: any[]) => {
         if (isCoolBypass()) return;
+        lastActionRef.current = () => {
+            if (inputRef.current.toLowerCase().trim() === "sudo make me cool") { setOutput("You were already cool 😎"); return; }
+            setOutput(fn(inputRef.current, ...args));
+        };
         setOutput(fn(input, ...args));
     };
     const runGenerator = (fn: (...args: any[]) => string, ...args: any[]) => {
-        // Generators usually don't use input, but good to be consistent if they did
+        lastActionRef.current = () => setOutput(fn(...args));
         setOutput(fn(...args));
     };
 
     const handleASCII = async () => {
         if (isCoolBypass()) return;
-        try {
-            const res = await generateASCII(input || "CASE", asciiFont as any);
-            setOutput(res);
-        } catch (err) {
-            setOutput(err instanceof Error ? err.message : String(err));
-        }
+        const doASCII = async () => {
+            try {
+                const res = await generateASCII(inputRef.current || "CASE", asciiFontRef.current as any);
+                setOutput(res);
+            } catch (err) {
+                setOutput(err instanceof Error ? err.message : String(err));
+            }
+        };
+        lastActionRef.current = doASCII;
+        await doASCII();
     };
 
     const tabs: { id: LabTab, label: string, icon: React.ReactNode }[] = [
@@ -731,11 +820,26 @@ export default function LabPage() {
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 flex-grow">
-                {/* Input Section */}
-                <section className="flex flex-col gap-3 md:gap-4" aria-label="Input area">
+                {/* Input Section — supports drag & drop */}
+                <section
+                    className="flex flex-col gap-3 md:gap-4 relative"
+                    aria-label="Input area"
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleFileDrop}
+                >
                     <div className="flex justify-between items-end px-1">
                         <h2 className="font-heading text-xl md:text-2xl" id="input-label">Input</h2>
                         <div className="flex gap-2">
+                            <SketchButton
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => { const prev = input; setInput(output); setOutput(prev); }}
+                                aria-label="Swap input and output"
+                                className="h-[44px] w-[44px] flex items-center justify-center"
+                            >
+                                <ArrowLeftRight size={20} aria-hidden="true" />
+                            </SketchButton>
                             <SketchButton
                                 variant="ghost"
                                 size="sm"
@@ -747,13 +851,21 @@ export default function LabPage() {
                             </SketchButton>
                         </div>
                     </div>
-                    <SketchTextarea
-                        aria-labelledby="input-label"
-                        placeholder="Type or paste something here..."
-                        className="flex-grow min-h-[180px] md:min-h-[300px] w-full text-lg"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                    />
+                    <div className="relative">
+                        <SketchTextarea
+                            aria-labelledby="input-label"
+                            placeholder="Type or paste something here... (or drag & drop a file)"
+                            className={`flex-grow min-h-[180px] md:min-h-[300px] w-full transition-all ${isDragging ? "border-marker-blue ring-4 ring-marker-blue/20" : ""}`}
+                            style={{ fontSize: `${fontSize}px` }}
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                        />
+                        {isDragging && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-marker-blue/5 border-4 border-dashed border-marker-blue rounded-2xl pointer-events-none z-10">
+                                <span className="font-heading text-2xl text-marker-blue">Drop file here</span>
+                            </div>
+                        )}
+                    </div>
                     <div className="flex flex-wrap gap-4 font-mono text-xs opacity-50 px-2" aria-label={`${stats.charCount} characters, ${stats.wordCount} words, ${stats.lineCount} lines`}>
                         <div className="flex gap-4" aria-hidden="true">
                             <span>CHARS: {stats.charCount}</span>
@@ -768,6 +880,45 @@ export default function LabPage() {
                     <div className="flex justify-between items-end px-1">
                         <h2 className="font-heading text-xl md:text-2xl text-marker-blue" id="output-label">Output</h2>
                         <div className="flex gap-2">
+                            {/* History dropdown */}
+                            <div className="relative" ref={historyRef}>
+                                <SketchButton
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setShowHistory(s => !s)}
+                                    aria-label="Show output history"
+                                    className="h-[44px] w-[44px] flex items-center justify-center"
+                                >
+                                    <History size={22} aria-hidden="true" />
+                                </SketchButton>
+                                {showHistory && history.length > 0 && (
+                                    <div className="absolute right-0 top-full mt-2 z-50 bg-white border-[3px] border-pencil shadow-hard-sm overflow-hidden min-w-[260px] max-w-[380px]" style={{ borderRadius: "12px 12px 12px 12px / 50px 12px 50px 12px" }}>
+                                        <div className="px-3 py-2 border-b-2 border-pencil/20 font-heading text-sm">Recent outputs</div>
+                                        <ul className="max-h-56 overflow-y-auto">
+                                            {history.map((item, i) => (
+                                                <li key={i}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setOutput(item); setShowHistory(false); }}
+                                                        className="w-full text-left px-3 py-2 font-mono text-xs hover:bg-paper-muted truncate transition-colors"
+                                                    >
+                                                        {item.slice(0, 80)}{item.length > 80 ? "\u2026" : ""}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <div className="px-3 py-2 border-t-2 border-pencil/20">
+                                            <button
+                                                type="button"
+                                                onClick={() => { setHistory([]); localStorage.removeItem("projectcase_history"); setShowHistory(false); }}
+                                                className="text-xs text-marker-red hover:underline font-body"
+                                            >
+                                                Clear history
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                             <SketchButton
                                 variant="secondary"
                                 size="sm"
@@ -792,11 +943,29 @@ export default function LabPage() {
                         readOnly
                         aria-labelledby="output-label"
                         aria-readonly="true"
-                        className="flex-grow min-h-[180px] md:min-h-[300px] bg-paper-muted/30 w-full text-lg"
+                        className="flex-grow min-h-[180px] md:min-h-[300px] bg-paper-muted/30 w-full"
+                        style={{ fontSize: `${fontSize}px` }}
                         value={output}
                         placeholder="Output will appear here..."
                     />
                 </section>
+            </div>
+
+            {/* Font size slider */}
+            <div className="flex items-center justify-end gap-3 px-1 opacity-60 hover:opacity-100 transition-opacity">
+                <span className="font-mono text-xs select-none" aria-hidden="true">A</span>
+                <input
+                    type="range"
+                    min="10"
+                    max="24"
+                    step="1"
+                    value={fontSize}
+                    onChange={(e) => setFontSize(Number(e.target.value))}
+                    aria-label="Textarea font size"
+                    className="w-24 accent-[var(--color-marker-blue)] cursor-pointer"
+                />
+                <span className="font-mono text-base font-bold select-none" aria-hidden="true">A</span>
+                <span className="font-mono text-xs opacity-70">{fontSize}px</span>
             </div>
 
             {/* Controls Section */}
